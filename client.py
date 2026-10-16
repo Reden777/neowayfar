@@ -54,7 +54,9 @@ def main():
             'l', 'look', 'n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw',
             'north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest',
             '$ods', 'ods', 'planets', 'shuttle', 'planet', 'take', 'drop',
-            'i', 'inv', 'inventory', 'pet', 'feed', 'attack', 'sit',
+            'i', 'inv', 'inventory', 'pet', 'feed', 'attack', 'sit', 'background', 'backgrounds',
+            'craft', 'build', 'construct', 'datapad', 'lookup', 'gather', 'score', 'skills', 'skill', 'learn', 'improvise',
+            'buildings', 'sectormap', 'resources', 'colony',
             'emote', ':', 'say', "'", 'help'
         }
 

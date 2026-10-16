@@ -202,6 +202,20 @@ def strip_ansi(text: str) -> str:
     return ansi_regex.sub("", text)
 
 
+def biome_at(planet_id: str, x: int, y: int) -> str:
+    """Return the stable biome assigned to a planetary coordinate.
+
+    The Hellcore notes use one octave when indexing a finite biome list.  The
+    extension can still return the list length at the upper edge, so clamp that
+    edge instead of wrapping it back to biome zero (which creates false seams).
+    Both room generation and the tactical map use this function.
+    """
+    planet = PLANETS[planet_id]
+    biomes = planet["biomes"]
+    index = fbm2d(x % 100, y % 100, planet["scale_x"], planet["scale_y"], len(biomes), octaves=1)
+    return biomes[max(0, min(index, len(biomes) - 1))]
+
+
 class Room:
     """Represents a procedurally spawned room in the On Demand Spawn ($ods) system."""
     def __init__(self, planet_id: str, x: int, y: int):
@@ -215,11 +229,9 @@ class Room:
         self.objid = f"#{10000 + (pseudo_hash(planet_id, x, y, 999) % 899999)}"
 
         planet = PLANETS[planet_id]
-        biome_list = planet["biomes"]
-        
-        # Calculate biome from Perlin FBM
-        biome_idx = fbm2d(x, y, planet["scale_x"], planet["scale_y"], len(biome_list), octaves=1) % len(biome_list)
-        self.biome_key = biome_list[biome_idx]
+        # Terrain is a deterministic property of the planet coordinate, not
+        # of the lifetime of its temporary on-demand room object.
+        self.biome_key = biome_at(planet_id, x, y)
         self.biome = BIOMES[self.biome_key]
 
         # Room title
@@ -359,8 +371,7 @@ def render_viewport_map(planet_id: str, center_x: int, center_y: int,
             world_y = (center_y + dy) % 100
 
             # Determine biome for tile
-            b_idx = fbm2d(world_x, world_y, planet["scale_x"], planet["scale_y"], len(biome_list), octaves=1) % len(biome_list)
-            b_info = BIOMES[biome_list[b_idx]]
+            b_info = BIOMES[biome_at(planet_id, world_x, world_y)]
 
             # Center is the player marker
             if dx == 0 and dy == 0:
