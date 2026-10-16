@@ -19,6 +19,7 @@ client_nicknames: Dict[Tuple[str, int], str] = {}
 client_locations: Dict[Tuple[str, int], Tuple[str, int, int]] = {}  # addr -> (planet_id, x, y)
 client_inventories: Dict[Tuple[str, int], Dict[str, str]] = {}
 client_stacks: Dict[Tuple[str, int], Dict[str, int]] = {}
+client_container_contents: Dict[Tuple[str, int], Dict[str, Dict[str, int]]] = {}
 player_profiles: Dict[str, Dict[str, Any]] = {}
 
 BACKGROUNDS = {
@@ -245,6 +246,32 @@ def consume_materials(address, ingredients: Dict[str, int]):
             stacks.pop(name)
             inventory.pop(name, None)
 
+
+def resolve_name(query: str, names):
+    """Resolve a full or partial in-world name without silently picking ambiguity."""
+    query = query.lower().strip()
+    choices = list(names)
+    exact = next((name for name in choices if name.lower() == query), None)
+    if exact:
+        return exact, None
+    matches = [name for name in choices if query and query in name.lower()]
+    if len(matches) == 1:
+        return matches[0], None
+    if len(matches) > 1:
+        return None, "Which do you mean: " + ", ".join(matches[:8]) + "?"
+    return None, None
+
+
+def parse_amount_item(text: str):
+    words = text.strip().split()
+    amount = 1
+    if words and words[0].isdigit():
+        amount = max(1, int(words.pop(0)))
+    elif words and words[0].lower() == "all":
+        amount = None
+        words.pop(0)
+    return amount, " ".join(words).lower()
+
 # Skill costs and prerequisites from the supplied Wayfar skill overview.
 SKILL_GROUPS = {
     "Tech Weapons": [("Power Operation", 50, ()), ("Touchpanel Training", 100, ("Power Operation",)), ("Non-Standard Ammunition Experience", 150, ("Power Operation",)), ("Machine Spirit", 200, ("Power Operation", "Touchpanel Training", "Non-Standard Ammunition Experience"))],
@@ -361,6 +388,7 @@ def handle_new_client(address: Tuple[str, int], server_socket: socket.socket):
         "copper wire strand": "A length of copper wire.",
     }
     client_stacks[address] = {name: 1 for name in client_inventories[address]}
+    client_container_contents[address] = {}
 
     welcome = (
         f"{BOLD}{FG_CYAN}=== Welcome to Wayfar 1444 ==={RESET}\n"
@@ -380,6 +408,7 @@ def handle_disconnect(address: Tuple[str, int], server_socket: socket.socket):
         client_nicknames.pop(address, None)
         client_inventories.pop(address, None)
         client_stacks.pop(address, None)
+        client_container_contents.pop(address, None)
 
         broadcast_to_room(
             f"--- {nickname} has departed into the void. ---",
@@ -420,6 +449,30 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
     args = parts[1:]
     if args and args[-1] == nickname:
         args = args[:-1]
+
+    if cmd == "chat":
+        message = " ".join(args).strip()
+        if not message:
+            server_socket.sendto(b"Chat what?", address)
+        else:
+            for recipient in list(clients):
+                server_socket.sendto(f"[Chatnet] {nickname}: {message}".encode("utf-8"), recipient)
+        return
+
+    if cmd == "page":
+        if len(args) < 2:
+            server_socket.sendto(b"Usage: page <person name> <message>", address)
+            return
+        target_query = args[0].lower()
+        recipients = [addr for addr, name in client_nicknames.items() if target_query in name.lower()]
+        if len(recipients) != 1:
+            response = "No logged-in person matches that name." if not recipients else "Which person do you mean?"
+            server_socket.sendto(response.encode("utf-8"), address)
+            return
+        message = " ".join(args[1:])
+        server_socket.sendto(f"[Page from {nickname}] {message}".encode("utf-8"), recipients[0])
+        server_socket.sendto(f"You page {client_nicknames[recipients[0]]}: {message}".encode("utf-8"), address)
+        return
 
     if cmd in ("map", "bigmap", "ansi", "blind"):
         profile = get_profile(nickname)
@@ -615,10 +668,21 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
         return
 
     if cmd == "craft":
-        product = " ".join(args).lower().strip()
-        recipe = RECIPES.get(product)
+        craft_args = " ".join(args).lower().strip()
+        requested_tool = None
+        if " on " in craft_args:
+            craft_args, tool_query = craft_args.rsplit(" on ", 1)
+            requested_tool, tool_error = resolve_name(tool_query, client_inventories.get(address, {}))
+            if tool_error:
+                server_socket.sendto(tool_error.encode("utf-8"), address)
+                return
+        product, product_error = resolve_name(craft_args, RECIPES)
+        if product_error:
+            server_socket.sendto(product_error.encode("utf-8"), address)
+            return
+        recipe = RECIPES.get(product) if product else None
         inventory = client_inventories.get(address, {})
-        if not product:
+        if not craft_args:
             response = "Craft what? Use 'datapad <query>' to find recipes."
         elif not recipe:
             response = f"You don't know a recipe for {product}. Try a broad datapad lookup."
@@ -626,7 +690,14 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
             tool, ingredients, _category = recipe
             stacks = client_stacks[address]
             missing = [f"{count} {name}" for name, count in ingredients.items() if carried_quantity(address, name) < count]
-            available_tool = next((candidate for candidate in {tool} | ALTERNATE_TOOLS.get(product, set()) if candidate in inventory), None)
+            valid_tools = {tool} | ALTERNATE_TOOLS.get(product, set())
+            available_tool = requested_tool if requested_tool in valid_tools else None
+            if requested_tool and not available_tool:
+                response = f"The {requested_tool} cannot craft {product}."
+                server_socket.sendto(response.encode("utf-8"), address)
+                return
+            if not requested_tool:
+                available_tool = next((candidate for candidate in valid_tools if candidate in inventory), None)
             if not available_tool:
                 response = f"You need a {tool} to craft {product}. Try the datapad for a recipe to make one."
             elif missing:
@@ -738,7 +809,15 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
     if cmd in ('l', 'look'):
         if args:
             target = " ".join(args).lower()
+            if target.startswith("at "):
+                target = target[3:]
             profile = get_profile(nickname)
+            container = next((name for name in client_container_contents.get(address, {}) if target == name or target in name), None)
+            if container:
+                contents = client_container_contents[address][container]
+                listing = ", ".join(f"{name} x{count}" if count > 1 else name for name, count in contents.items())
+                server_socket.sendto((f"Inside {container}: " + (listing if listing else "nothing") + ".").encode("utf-8"), address)
+                return
             if target == "sector center" and any(item == target and p == planet_id and bx == x and by == y for item, p, bx, by in profile["buildings"]):
                 response = ("A large, gray brutalist building with few windows. It administers tourism and citizenship.\n"
                             "Rooms: central plaza, governor's office, factorium district.\n"
@@ -771,6 +850,31 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
                         server_socket.sendto(f"You don't see a '{target}' here.".encode('utf-8'), address)
         else:
             send_look(address, server_socket)
+        return
+
+    if cmd in ("examine", "exam", "x"):
+        target = " ".join(args).lower().strip()
+        if target.startswith("at "):
+            target = target[3:]
+        candidates = list(client_inventories.get(address, {})) + list(room.items) + list(room.creatures)
+        found, error = resolve_name(target, dict.fromkeys(candidates))
+        if error:
+            response = error
+        elif not found:
+            response = f"You don't see or carry '{target}'."
+        elif found in room.creatures:
+            response = f"A wild {found}. Commands: look {found}, pet {found}, feed {found}, attack {found}."
+        else:
+            description = client_inventories.get(address, {}).get(found, room.items.get(found, f"A {found}."))
+            if found in client_container_contents.get(address, {}) or found in ("resource locker", "shipping container", "fiber backpack", "metal locker", "closet"):
+                commands = f"Commands: look {found}, count <item> in {found}, put <item> in {found}, get <item> from {found}."
+                client_container_contents[address].setdefault(found, {})
+            else:
+                commands = f"Commands: look {found}, drop {found}, count {found}."
+                if found in RECIPES:
+                    commands += f" Craft with: craft {found} on {RECIPES[found][0]}."
+            response = f"{description}\n{commands}"
+        server_socket.sendto(response.encode("utf-8"), address)
         return
 
     # 3. $ODS Status Command (On-Demand Room System)
