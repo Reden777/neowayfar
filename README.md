@@ -8,6 +8,7 @@ A Python recreation of the classic **Wayfar 1444** (Hellcore / LambdaMOO) sci-fi
 - **Tactical Viewport Map**: Side-by-side terminal rendering:
   - Left column: 17x13 ANSI tile map (2 characters wide per tile: `..`, `00`, `  `, `--`) with the player marked as `()`.
   - Right column: Room title, colored biome badge (e.g. `desert biome`, `forest biome`), and procedural descriptive sentences.
+- **Map Preferences**: `map big` or `bigmap on` selects a 21x21 viewport; `map small` returns to 17x13. `ansi off` or `blind on` omits ANSI control sequences from map and room output. Coordinate biome lookups are cached for quicker redraws.
 - **Three Planets (100×100 Grids)**:
   - `WY-1444`: Homeworld with forests, water, rocky peaks, and scrap plains.
   - `MO-52`: Desert world with sand dunes, canyons, and exposed metallic needles.
@@ -15,6 +16,7 @@ A Python recreation of the classic **Wayfar 1444** (Hellcore / LambdaMOO) sci-fi
 - **8-Directional Movement**: `n`, `ne`, `e`, `se`, `s`, `sw`, `w`, `nw`.
 - **Ecology & Interactions**: Wild alien fauna (`muta-chicken`, `wire asp`, `silica scorpion`) that players can observe, pet, feed, or combat.
 - **Character Backgrounds**: Select Ranger, Fabricator, Retiree, Student, Lab Tech, Botanist, or Hacker with `background select <name>`. Use `background list` and `background status` to view objectives and progress. Ranger wildlife defeats, Fabricator crafting, and Retiree construction currently progress; completing them awards the listed reroll points. Hacker requires five reroll points to unlock. Botanist lists its starting skills. Profiles last for the current server process; research, discovery, hacking, and starship background objectives await those game systems.
+- **Scavenger Background and POIs**: The Scavenger background tracks ten planetary POIs scavenged and awards one reroll point. Rare abandoned droid factories are marked `[]` on the map, contain sleeping hostile cell-bomber and assembler droids, and may yield advanced technology. The robots wake when a named player enters; defeat them before using `scavenge`.
 - **Manual Crafting**: New characters carry a basic crafting tool and colonial assembly datapad. Use `datapad <query>` or `lookup <query>` for known recipes, `gather [material]` to collect local resources, and `craft <product>` to make an item with the required tool and ingredients. Crafting consumes ingredients and produces quality 75 items; Fabricator progress counts each qualifying product.
 - **Equipment Crafting Tool**: Unlock it with a basic crafting tool, one weak power emitter, and two solid-phase metal. Once crafted, it unlocks the equipment product catalog across weapons, armor, tools, components, ammunition, containers, gadgets, modules, and products.
 - **Engineering Tool**: Craft it with a basic crafting tool, one weak power emitter, and two inert metal fragments (complexity 10.0). It unlocks the experimental starship assembly tool and the listed automated machines, structures, and products. Their individual ingredient recipes are compact engine approximations because the reference does not provide them.

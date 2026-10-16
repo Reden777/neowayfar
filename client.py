@@ -57,6 +57,7 @@ def main():
             'i', 'inv', 'inventory', 'pet', 'feed', 'attack', 'sit', 'background', 'backgrounds',
             'craft', 'build', 'construct', 'datapad', 'lookup', 'gather', 'score', 'skills', 'skill', 'learn', 'improvise',
             'buildings', 'sectormap', 'resources', 'colony',
+            'map', 'bigmap', 'ansi', 'blind', 'scavenge',
             'emote', ':', 'say', "'", 'help'
         }
 

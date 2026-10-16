@@ -5,6 +5,7 @@ from typing import Dict, Tuple, Set, Any
 from world import (
     ods, PLANETS, CARDINAL_DIRECTIONS,
     render_viewport_map, format_side_by_side,
+    strip_ansi,
     RESET, BOLD, FG_CYAN, FG_YELLOW, FG_WHITE, FG_RED
 )
 
@@ -27,6 +28,7 @@ BACKGROUNDS = {
     "student": {"description": "Fresh from space university, your goal is to experience something new and epic.", "difficulty": "normal", "goal": "Reroll from the cockpit of a starship in space.", "target": 1, "reward": 1},
     "lab tech": {"description": "Study artifacts at a laboratory terminal.", "difficulty": "normal", "goal": "Research 25 artifacts.", "target": 25, "reward": 2},
     "botanist": {"description": "A keen gardener who yearns to explore and discover botanical life.", "difficulty": "moderate", "goal": "Discover 15 undocumented botanical specimens.", "target": 15, "reward": 1, "skills": ("Heavy Tan", "Sightseer", "Developing Observation")},
+    "scavenger": {"description": "You seek abandoned planetary sites and the technology left behind.", "difficulty": "normal", "goal": "Scavenge 10 planetary points of interest.", "target": 10, "reward": 1},
     "hacker": {"description": "Hack ships, control pads, building AI, and other objects.", "difficulty": "unspecified", "goal": "Hack 25 objects.", "target": 25, "reward": 2, "unlock": 5},
 }
 
@@ -268,7 +270,7 @@ SKILLS = {skill.lower(): {"name": skill, "group": group, "cost": cost, "requires
 
 
 def get_profile(nickname: str) -> Dict[str, Any]:
-    return player_profiles.setdefault(nickname, {"background": None, "progress": 0, "reroll_points": 0, "completed": set(), "wildlife_kills": 0, "crafted_count": 0, "buildings": [], "skills": set(), "skill_points": 0, "skill_point_cap": 2500})
+    return player_profiles.setdefault(nickname, {"background": None, "progress": 0, "reroll_points": 0, "completed": set(), "wildlife_kills": 0, "crafted_count": 0, "buildings": [], "skills": set(), "skill_points": 0, "skill_point_cap": 2500, "bigmap": False, "ansi": True, "health": 100, "scavenged_pois": set()})
 
 
 def award_skillpoints(nickname: str, amount: int):
@@ -279,11 +281,17 @@ def award_skillpoints(nickname: str, amount: int):
 def update_background_progress(nickname: str, event: str, amount: int = 1) -> str:
     profile = get_profile(nickname)
     name = profile["background"]
-    if not name or name in profile["completed"] or (name == "ranger" and event != "wildlife_kill"):
+    if not name or name in profile["completed"]:
         return ""
     if name == "ranger":
+        if event != "wildlife_kill":
+            return ""
         profile["wildlife_kills"] += amount
         profile["progress"] = profile["wildlife_kills"]
+    elif name == "scavenger":
+        if event != "poi_scavenge":
+            return ""
+        profile["progress"] += amount
     else:
         return ""
     bg = BACKGROUNDS[name]
@@ -320,8 +328,22 @@ def send_look(address: Tuple[str, int], server_socket: socket.socket):
             other_people.append(client_nicknames.get(addr, "Unknown"))
 
     nickname = client_nicknames.get(address, "Traveler")
-    map_rows = render_viewport_map(planet_id, x, y, width_tiles=17, height_tiles=13)
+    profile = get_profile(nickname)
+    if room.poi_kind == "droid factory" and not room.poi_active and address in client_nicknames:
+        room.poi_active = True
+        for droid in room.hostile_droids:
+            droid["active"] = True
+        damage = random.randint(4, 10)
+        profile["health"] = max(1, profile["health"] - damage)
+        room.poi_alert = f"The sleeping droids wake and attack! You take {damage} damage. Health: {profile['health']}/100."
+    bigmap = profile.get("bigmap", False)
+    use_ansi = profile.get("ansi", True)
+    size = 21 if bigmap else 17
+    map_rows = render_viewport_map(planet_id, x, y, width_tiles=size, height_tiles=21 if bigmap else 13, use_ansi=use_ansi)
     display_output = format_side_by_side(map_rows, room, nickname, other_people)
+    if not use_ansi:
+        display_output = strip_ansi(display_output)
+    display_output += f"\nHealth: {profile['health']}/100."
 
     server_socket.sendto(display_output.encode('utf-8'), address)
 
@@ -385,6 +407,7 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
         client_nicknames[address] = nick
         broadcast_to_room(f"--- {nick} materializes at these coordinates. ---",
                           planet_id, x, y, server_socket, exclude_address=address)
+        send_look(address, server_socket)
         return
 
     # Normal chat (e.g. Nick: message)
@@ -397,6 +420,36 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
     args = parts[1:]
     if args and args[-1] == nickname:
         args = args[:-1]
+
+    if cmd in ("map", "bigmap", "ansi", "blind"):
+        profile = get_profile(nickname)
+        value = " ".join(args).lower().strip()
+        if cmd == "map" and value in ("big", "bigmap", "21x21"):
+            profile["bigmap"] = True
+        elif cmd == "map" and value in ("small", "normal", "17x13"):
+            profile["bigmap"] = False
+        elif cmd == "bigmap" and value in ("on", "yes", "true"):
+            profile["bigmap"] = True
+        elif cmd == "bigmap" and value in ("off", "no", "false"):
+            profile["bigmap"] = False
+        elif cmd == "bigmap" and value in ("toggle", ""):
+            profile["bigmap"] = not profile["bigmap"]
+        elif cmd == "ansi" and value in ("on", "yes", "true"):
+            profile["ansi"] = True
+        elif cmd == "ansi" and value in ("off", "no", "false"):
+            profile["ansi"] = False
+        elif cmd == "blind" and value in ("on", "yes", "true"):
+            profile["ansi"] = False
+        elif cmd == "blind" and value in ("off", "no", "false"):
+            profile["ansi"] = True
+        elif value:
+            response = "Use map big|small, bigmap on|off|toggle, ansi on|off, or blind on|off."
+            server_socket.sendto(response.encode("utf-8"), address)
+            return
+        response = f"Map preference: {'21x21' if profile['bigmap'] else '17x13'}; ANSI {'on' if profile['ansi'] else 'off'}."
+        server_socket.sendto(response.encode("utf-8"), address)
+        send_look(address, server_socket)
+        return
 
     if cmd == "score":
         profile = get_profile(nickname)
@@ -803,6 +856,39 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
                     server_socket.sendto(f"You defeat the {matching_critter}. Its remains can be looted.{progress_msg}".encode('utf-8'), address)
                     broadcast_to_room(f"--- {nickname} defeats the {matching_critter}. ---",
                                       planet_id, x, y, server_socket, exclude_address=address)
+            elif cmd == "attack":
+                matching_droid = next((droid for droid in room.hostile_droids if target in droid["name"].lower()), None)
+                if not matching_droid:
+                    server_socket.sendto(f"You do not see a '{target}' here to attack.".encode('utf-8'), address)
+                elif not matching_droid["active"]:
+                    server_socket.sendto(f"The {matching_droid['name']} is dormant.".encode('utf-8'), address)
+                else:
+                    damage = random.randint(20, 45)
+                    matching_droid["health"] -= damage
+                    result = f"You deal {damage} damage to the {matching_droid['name']}."
+                    if matching_droid["health"] <= 0:
+                        room.hostile_droids.remove(matching_droid)
+                        room.items[f"{matching_droid['name']} remains"] = f"The wreckage of a {matching_droid['name']}."
+                        room.items["spent cell casing"] = "A spent cell casing lies among the droid wreckage."
+                        result += " The droid is destroyed; its remains can be looted."
+                        if random.random() < 0.35:
+                            tech = random.choice(("prototype targeting matrix", "advanced power cell", "droid logic core", "nanofiber spool", "major random stat relic"))
+                            room.items[tech] = f"Advanced technology recovered from the {matching_droid['name']}: {tech}."
+                            result += f" You recover {tech}."
+                    else:
+                        result += f" It has {matching_droid['health']} hit points remaining."
+                    attackers = [droid for droid in room.hostile_droids if droid["active"]]
+                    if attackers:
+                        incoming = sum(random.randint(3, 9) for _ in attackers)
+                        profile = get_profile(nickname)
+                        profile["health"] = max(0, profile["health"] - incoming)
+                        result += f" The hostile robots return fire for {incoming} damage (health {profile['health']}/100)."
+                        if profile["health"] == 0:
+                            profile["health"] = 50
+                            result += " You are incapacitated and recover with 50 health."
+                    server_socket.sendto(result.encode("utf-8"), address)
+                    broadcast_to_room(f"--- {nickname} attacks a droid in the factory. ---",
+                                      planet_id, x, y, server_socket, exclude_address=address)
             else:
                 server_socket.sendto(f"You do not see a '{target}' here to {cmd}.".encode('utf-8'), address)
         else:
@@ -845,21 +931,52 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
         server_socket.sendto(response.encode("utf-8"), address)
         return
 
+    if cmd == "scavenge":
+        profile = get_profile(nickname)
+        poi_key = (planet_id, x, y)
+        if room.poi_kind != "droid factory":
+            response = "There is no point of interest here to scavenge. Look for [] markers on the map."
+        elif room.hostile_droids:
+            response = "The factory's hostile droids must be defeated before you can scavenge safely."
+        elif poi_key in profile["scavenged_pois"]:
+            response = "You have already scavenged this point of interest."
+        else:
+            profile["scavenged_pois"].add(poi_key)
+            tech = next((name for name in room.items if name in ("prototype targeting matrix", "advanced power cell", "droid logic core", "nanofiber spool", "major random stat relic")), None)
+            if tech:
+                description = room.items.pop(tech)
+                client_inventories[address][tech] = description
+                client_stacks[address][tech] = client_stacks[address].get(tech, 0) + 1
+                loot_msg = f"You recover {tech}."
+            elif random.random() < 0.35:
+                tech = random.choice(("prototype targeting matrix", "advanced power cell", "droid logic core", "nanofiber spool", "major random stat relic"))
+                client_inventories[address][tech] = f"Recovered advanced technology: {tech}."
+                client_stacks[address][tech] = client_stacks[address].get(tech, 0) + 1
+                loot_msg = f"You recover {tech}."
+            else:
+                loot_msg = "You find only wreckage and spent casings."
+            progress_msg = update_background_progress(nickname, "poi_scavenge")
+            award_skillpoints(nickname, 10)
+            response = f"You search the droid factory. {loot_msg}{progress_msg}"
+        server_socket.sendto(response.encode("utf-8"), address)
+        return
+
     # 8. Help
     if cmd == 'help':
         help_msg = (
             f"{BOLD}Wayfar 1444 Command Index:{RESET}\n"
             f"  {FG_CYAN}Movement:{RESET} n, ne, e, se, s, sw, w, nw (8 cardinal directions)\n"
-            f"  {FG_CYAN}Tactical Map:{RESET} l or look (re-renders viewport & room sentences)\n"
+            f"  {FG_CYAN}Tactical Map:{RESET} l or look; map big|small, bigmap toggle, ansi on|off, blind on|off\n"
             f"  {FG_CYAN}Spawn Status:{RESET} $ods (displays active on demand rooms and cache)\n"
             f"  {FG_CYAN}Interplanetary:{RESET} planets, shuttle <planet_name>\n"
             f"  {FG_CYAN}Interaction:{RESET} look at <target>, take <item>, drop <item>, i (inventory)\n"
             f"  {FG_CYAN}Creatures:{RESET} pet <critter>, feed <critter>, attack <critter>\n"
-            f"  {FG_CYAN}Backgrounds:{RESET} background list, background select <name>, background status\n"
+            f"  {FG_CYAN}Backgrounds:{RESET} background list, background select <name>, background status (includes Scavenger)\n"
             f"  {FG_CYAN}Skills:{RESET} score, skills [group or name], learn <skill name>\n"
             f"  {FG_CYAN}Improvisation:{RESET} improvise, improvise on <tool>, improvise <product> on <tool> (requires Improvisation skill)\n"
             f"  {FG_CYAN}Crafting:{RESET} craft <product>, build <building>, datapad <query>, gather [material]\n"
             f"  {FG_CYAN}Colony:{RESET} buildings, sectormap, resources, colony\n"
+            f"  {FG_CYAN}Exploration:{RESET} [] marks a droid factory point of interest; defeat its robots, then scavenge\n"
             f"  {FG_CYAN}Social:{RESET} say <text>, emote <action>, sit <item>, exit"
         )
         server_socket.sendto(help_msg.encode('utf-8'), address)

@@ -5,7 +5,8 @@ Renders the side-by-side ANSI tactical terrain map and procedural room descripti
 
 import time
 import re
-from typing import Dict, List, Tuple, Any
+from functools import lru_cache
+from typing import Dict, List, Tuple, Any, Optional
 from perlin import fbm2d, raw_noise2d
 
 # ANSI Color Codes
@@ -196,12 +197,20 @@ def pseudo_hash(planet_id: str, x: int, y: int, seed: int = 42) -> int:
     return val
 
 
+def poi_at(planet_id: str, x: int, y: int) -> Optional[str]:
+    """Stable, uncommon planetary point of interest placement."""
+    if pseudo_hash(planet_id, x % 100, y % 100, 1717) % 200 == 0:
+        return "droid factory"
+    return None
+
+
 def strip_ansi(text: str) -> str:
     """Removes ANSI escape codes to compute visible character length."""
     ansi_regex = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     return ansi_regex.sub("", text)
 
 
+@lru_cache(maxsize=20000)
 def biome_at(planet_id: str, x: int, y: int) -> str:
     """Return the stable biome assigned to a planetary coordinate.
 
@@ -233,6 +242,23 @@ class Room:
         # of the lifetime of its temporary on-demand room object.
         self.biome_key = biome_at(planet_id, x, y)
         self.biome = BIOMES[self.biome_key]
+        self.poi_kind = poi_at(planet_id, x, y)
+        self.poi_active = False
+        self.hostile_droids: List[Dict[str, Any]] = []
+        self.poi_alert = ""
+        self.items: Dict[str, str] = {}
+        if self.poi_kind == "droid factory":
+            self.hostile_droids = [
+                {"name": f"cell-bomber droid (mk-{pseudo_hash(planet_id, x, y, 1771) % 900000 + 100000})", "health": 60, "active": False},
+                {"name": f"assembler droid (nq-{pseudo_hash(planet_id, x, y, 1772) % 900000 + 100000})", "health": 85, "active": False},
+            ]
+            self.items["shell casings"] = "A scatter of spent shell casings lies across the concrete floor."
+            self.items["impact scorch mark"] = "A deep impact has scorched the factory floor."
+            loot = ("prototype targeting matrix", "advanced power cell", "droid logic core", "nanofiber spool", "major random stat relic")
+            loot_hash = pseudo_hash(planet_id, x, y, 1773)
+            if loot_hash % 100 < 65:
+                item = loot[loot_hash % len(loot)]
+                self.items = {item: f"An intact piece of advanced technology recovered from the droid factory: {item}."}
 
         # Room title
         h_name = pseudo_hash(planet_id, x, y, 101)
@@ -271,11 +297,10 @@ class Room:
                     self.creatures.append(c2)
 
         # Ground Items
-        self.items: Dict[str, str] = {}
         h_item = pseudo_hash(planet_id, x, y, 707)
         if (h_item % 100) < 40:
             item_name = planet["items"][h_item % len(planet["items"])]
-            self.items[item_name] = f"A salvageable {item_name} rests on the ground."
+            self.items.setdefault(item_name, f"A salvageable {item_name} rests on the ground.")
 
         self.sitting_users: Dict[Any, str] = {}
 
@@ -352,7 +377,8 @@ ods = OnDemandSystem()
 
 
 def render_viewport_map(planet_id: str, center_x: int, center_y: int,
-                        width_tiles: int = 17, height_tiles: int = 13) -> List[str]:
+                        width_tiles: int = 17, height_tiles: int = 13,
+                        use_ansi: bool = True) -> List[str]:
     """
     Renders the tactical 2-character per tile ANSI map around the player.
     Center tile is marked with '()' for the player.
@@ -376,12 +402,14 @@ def render_viewport_map(planet_id: str, center_x: int, center_y: int,
             # Center is the player marker
             if dx == 0 and dy == 0:
                 # Authentic Wayfar player marker: ()
-                row_str += f"{b_info['bg']}{BOLD}{FG_WHITE}(){RESET}"
+                row_str += f"{b_info['bg']}{BOLD}{FG_WHITE}(){RESET}" if use_ansi else "()"
             else:
                 # Micro-feature character
                 h_char = pseudo_hash(planet_id, world_x, world_y, 888)
                 char_pair = b_info["char_options"][h_char % len(b_info["char_options"])]
-                row_str += f"{b_info['bg']}{b_info['fg']}{char_pair}{RESET}"
+                if poi_at(planet_id, world_x, world_y):
+                    char_pair = "[]"
+                row_str += f"{b_info['bg']}{b_info['fg']}{char_pair}{RESET}" if use_ansi else char_pair
 
         map_rows.append(row_str)
 
@@ -406,6 +434,10 @@ def format_side_by_side(map_rows: List[str], room: Room,
     biome_badge = f"{badge_bg}{badge_fg} {room.biome_key} biome {RESET}"
     text_lines.append(biome_badge)
 
+    if room.poi_kind:
+        text_lines.append("point of interest: abandoned droid factory")
+        text_lines.append("An overgrown industrial complex; dormant robots and advanced salvage may remain inside.")
+
     # 3. Descriptive Sentences
     for sentence in room.sentences:
         text_lines.append(sentence)
@@ -415,7 +447,8 @@ def format_side_by_side(map_rows: List[str], room: Room,
     max_rows = max(len(map_rows), len(text_lines))
 
     for i in range(max_rows):
-        map_part = map_rows[i] if i < len(map_rows) else " " * 34
+        map_width = len(strip_ansi(map_rows[0])) if map_rows else 0
+        map_part = map_rows[i] if i < len(map_rows) else " " * map_width
         text_part = text_lines[i] if i < len(text_lines) else ""
         combined_lines.append(f"{map_part}  {text_part}")
 
@@ -429,6 +462,13 @@ def format_side_by_side(map_rows: List[str], room: Room,
         else:
             c_desc = f"A {room.creatures[0]} and a {room.creatures[1]} are standing here."
         footer_lines.append(f"\n{BOLD}{c_desc}{RESET}")
+
+    if room.hostile_droids:
+        state = "active" if room.poi_active else "dormant"
+        footer_lines.append(f"\nHostile robots ({state}): " + "; ".join(f"{droid['name']} [{droid['health']} hp]" for droid in room.hostile_droids))
+
+    if room.poi_alert:
+        footer_lines.append(f"\n{BOLD}{room.poi_alert}{RESET}")
 
     # Other players
     if other_people:
