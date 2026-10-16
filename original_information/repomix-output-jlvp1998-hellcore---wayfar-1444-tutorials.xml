@@ -1,0 +1,647 @@
+<repomix><file_summary>This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+The content has been processed where content has been formatted for parsing in xml style, security check has been disabled.<purpose>This file contains a packed representation of the entire repository&apos;s contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.</purpose><file_format>The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Repository files, each consisting of:
+  - File path as an attribute
+  - Full contents of the file</file_format><usage_guidelines>- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.</usage_guidelines><notes>- Some files may have been excluded based on .gitignore rules and Repomix&apos;s configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Content has been formatted for parsing in xml style
+- Security check has been disabled - content may contain sensitive information
+- Files are sorted by Git change count (files with more changes are at the bottom)</notes></file_summary><directory_structure>.gitattributes
+.gitignore
+advanced_hellcore_action_tutorial_part2.txt
+Amazon_Route53_With_Hellcore.txt
+broadcasting_to_irc_server.txt
+Exporting_JSON_from_Hellcore_to_Datatables.txt
+hellcore_64bit.txt
+hellcore_gmail_routing.txt
+mxp_notes.txt
+On_Demand_Room_system_Part1.txt
+perlin2_hellcore.txt
+writing_useable_item_hellcore.txt</directory_structure><files>This section contains the contents of the repository&apos;s files.<file path=".gitattributes"># Auto detect text files and perform LF normalization
+* text=auto
+
+# Custom for Visual Studio
+*.cs     diff=csharp
+
+# Standard to msysgit
+*.doc	 diff=astextplain
+*.DOC	 diff=astextplain
+*.docx diff=astextplain
+*.DOCX diff=astextplain
+*.dot  diff=astextplain
+*.DOT  diff=astextplain
+*.pdf  diff=astextplain
+*.PDF	 diff=astextplain
+*.rtf	 diff=astextplain
+*.RTF	 diff=astextplain</file><file path=".gitignore"># Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk</file><file path="advanced_hellcore_action_tutorial_part2.txt">The Advanced Hellcore $action tutorial, Part 2
+
+$action Pro Tips
+
+
+Extra utility verbs on $creatures and $players:
+* is_doing(OBJ action, [ ?OBJ callback ]) - this requires the first argument, and the second is optional.  It checks a player or creature to see if they are executing the action sent as the first argument.  If the callback argument is also present, that is checked against the player&apos;s executing action.  If the creature or player matches the criteria, is_doing returns 1, otherwise 0.
+
+Example:
+&quot; pretend this is a sanity check in an eat command&quot;;
+if( player:is_doing($actions.mock_attack) )
+     player:tell(&quot;You can&apos;t eat right now, because you are attacking!&quot;);
+endif
+
+&quot;and this one checks to see if the player is attacking with a sword&quot;;
+&quot;$weapons.sword would be a valid weapon object, and we&apos;re assuming the first callback in $actions.mock_attack is the weapon being used.&quot;;
+if( player:is_doing($actions.mock_attack, $weapons.sword) )
+    player:tell(&quot;You use your sword to chop your food before eating it.  Oh boy!&quot;);
+endif
+
+Changing call back arguments in an $action
+Scenario: You want to loop through an action exactly 5 times.
+
+&quot;you queue it like this&quot;;
+player:queue_action($actions.mock_loop, {1, 5});
+
+&quot;in your _finish code you check the stage status and increment stage (in this examples, args[2][1])&quot;;
+who = args[1];
+stage = args[2][1];
+max_stage = args[2][2];
+
+if(stage &lt; max_stage)
+  stage = stage + 1;
+  &quot;keep looping, by returning an action object from _finish. _continue will be called on the action you return.&quot;;
+  &quot;Usually you return the action you&apos;re executing!&quot;;
+  return {this, {stage, max_stage}};
+else
+  who:tell(&quot;Looping complete!&quot;);
+  &quot;we can return E_NONE to finish the action, or fall through to more codes dealing with the specifics&quot;;
+  return E_NONE;
+endif
+
+Broadcasting events from within an $action
+
+Events and callbacks should be familiar topics for anyone who has done any event driven programming.  The idea is simple: code &apos;broadcasts&apos; an &apos;event&apos;, and other code &apos;listens&apos; and then reacts to the event.  You broadcast with this verb, which is defined on #1 or $room depending on your hellcore version:
+broadcast_event(INT is_start, OBJ action, OBJ who, LIST callbacks)
+
+is_start is 0 for a completing action, and 1 for a beginning action.  action is the action object (or really whatever object) being broadcast, who is the action executor, and callbacks is a list of the callbacks from the action (exactly the same as args[2] within the $action itself).
+
+Example:
+
+$actions.mock_walk
+&quot;let&apos;s announce we&apos;re going to walk around - pretend this is in a _start verb&quot;;
+who = args[1];
+direction = args[2][1];
+&quot;we broadcast a &apos;hey i&apos;m going to be walking here&apos; event&quot;;
+who.location:broadcast_event(1, this, who, {direction});
+
+&quot;now pretend this is in _finish, we announce the completion of the move&quot;;
+who = args[1];
+direction = args[2][1];
+who.location:broadcast_event(0, this, who, {direction});
+
+These events can then be received by other objects in the same location as who from our example above.  The two main ways to receive these are:
+forbid_action_* - this should be specific to the action you want to forbid.  For our example, the verb would be named forbid_action_mock_walk.  If forbid_action returns 1, the action is halted and the actor cannot execute it.
+hear_event_* - For our example the verb would be hear_event_mock_walk.
+
+Example on a player or creature, to receive walking messages:
+
+hear_event_mock_walk
+{starting, action, who, callbacks} = args;
+direction = callbacks[1];
+&quot; as you can see we receive the args just like they are sent to broadcast_event&quot;;
+if(!starting)
+  &quot;if the walk is actually occuring, let&apos;s tell ourselves about it&quot;;
+  this:tell(who:name(), &quot; walks off to the &quot;, direction, &quot;.&quot;);
+endif
+
+Calling an impromptu action from any object
+
+You have an object, lets call it MEDICAL TERMINAL.  You have a verb allowing the player to INVESTIGATE MEDICAL TERMINAL, and you want a short action (not require start, continue, finish, but you&apos;d like the delay and action messaging).  Here&apos;s how you do that.
+
+@verb terminal:investigate
+player:queue_action($actions.verb, {this, &quot;_search_terminal&quot;, {player}, 3.0, 1}, &quot;searching the terminal for valuable information&quot;);
+
+@verb terminal:_search_terminal
+{is_start, object, actor, callbacks} = args;
+&quot;object&quot; will be equal to the medical terminal&apos;s object number
+actor will be equal to the player who queued the action
+and callbacks will be array containing the player who queued the action
+
+This will display the player as &quot;searching the terminal for valuable information, and within this _search_terminal verb you can do whatever simple operations you like without having to write a full action.  It will take 3 seconds for the action to begin (specified by the 3.0).</file><file path="Amazon_Route53_With_Hellcore.txt">Tips for running DNS service with Amazon route 53 (instead of running named on your box):
+
+Wayfar has originally run its own DNS servers.  I shifted this to Amazon, since I am moving the server and no longer want to run DNS services on the box itself.
+
+First step - the easy part:
+
+Import your zone file into Route 53 Amazon.  It costs about a dollar a month.
+
+Hard part: you have a second server that you&apos;d like to modify and upgrade before fully moving to it as your primary server.
+
+Step 1: http://cobus.io/linux/2015/02/17/route-53-dns-update-script.html
+
+Get these scripts installed and configure not just the DNS (test.wayfar1444.com for instance), but also a user (updateip or dyndns) with the appropriate permissions.  Run the updateip script to make sure that your changes are reflected in the amazon dashboard.
+
+Once you&apos;ve confirmed that the changes are actually taking effect, use crontab to add this to your server and keep amazon&apos;s DNS service updated with your actual IP by calling crontab -e:
+
+*/30 * * * * /home/wayfar/www/updateip.sh YOURHOSTEDZONEHERE your-iam-user your-domain.com</file><file path="broadcasting_to_irc_server.txt">LambdaMOO/Hellcore: Broadcasting to an IRC server
+
+On Wayfar, when a player is killed they get a death taunt in the style of the LORD or BBS door games.  When enough kills are accumulated the MOO connects to an IRC server, posts a kill update, and then disconnects.
+
+The commands to interact with an IRC server are straightforward:
+
+conn = open_network_connection(server, port);
+set_connection_option(conn, &quot;hold-input&quot;, 1);
+
+Open the connection and tell the MOO not interpret anything on this connection as a game command.
+
+
+
+notify(conn, &quot;USER YOUR_USR_NAME 8 *  : your_comment&quot;);
+botname = &quot;Jerkturkey&quot;;
+notify(conn, &quot;NICK &quot; + botname);
+
+That sends the USER and NICK.  Now the IRC server will send a bunch of nonsense at you, then disconnect you if you don&apos;t answer the ping request in time.  So we wait for the first ping before we start sending messages:
+
+
+while (line = read(conn))
+      if (hurf = $su:explode(line))
+        if ($su:uppercase(hurf[1]) == &quot;PING&quot;)
+          notify(conn, &quot;PONG &quot; + hurf[2]);
+          break;
+        endif
+      endif
+    endwhile
+
+Note that we have to reply with information from the request.  Next up, join a channel:
+
+notify(conn, &quot;JOIN #wayfar1444&quot;);
+
+Send whatever messages we&apos;ve arranged, preferably a batch of messages:
+
+for x in ($web.irc_queue)
+     notify(conn, &quot;PRIVMSG #wayfar1444 :&quot;+x);
+endfor
+
+Tell the IRC server we&apos;re leaving and disconnect:
+
+notify(conn, &quot;QUIT&quot;);
+boot_player(conn);</file><file path="Exporting_JSON_from_Hellcore_to_Datatables.txt">Tutorial: Exporting JSON from Hellcore for use with jquery Datatables
+
+* Step 1: HTML or PHP template page
+
+ You will need jquery and datatables, which can be downloaded to your local folders. These will be included in our PHP pages later. Let&apos;s say we want to display all weapons, here is the template (HTML or PHP). You must replace $weapons_db with the actual OBJNUM of your weapons database:
+
+* Step 2: PHP ajax page
+
+ Query.php is a PHP file that queries the MOO server on port 8080. This is already setup by default in hellcore, but you need some modifications, firstly to $json_utils:_www
+$json_utils:&quot;_www _html&quot;       this none this
+     try
+       wargs = $su:explode(args[1], &quot;/&quot;);
+       if (length(wargs) &gt; 1)
+         item = toobj(wargs[2]);
+         if (gamevalid(item))
+           data = item:_json();
+           return {data};
+         endif
+       endif
+     except e (ANY)
+       $rpg:report_error(e);
+       return pass(@args);
+     endtry
+   return pass(@args);
+This changes the $json_utils:_www verb to accept an additional objects. Now let&apos;s make query.php: You must replace $json_utils in the code above with the actual object number of your JSON utils object. The code above means that we call json_utils, and we pass it an additional argument in the form of: yourdomain.com:8080/$json_utils/desired_objectnumber
+
+ * Step 3:
+Now - our desired_objectnumber must have _json verb, and it must return formatted json (not HTML). Note that the data is structed very specifically to comply with jquery datatables. Example:
+$weapons:_json
+w = $ou:fertile_branches($weapon);
+data = [];
+data = [&quot;data&quot; -&gt; {}];
+for x in (w)
+  id = tostr(x)[2..$];
+  d = data[&quot;data&quot;];
+  d = setadd(d, {id, x:name()});
+  data[&quot;data&quot;] = d;
+  yield;
+endfor
+return $json_utils:encode(data);
+
+* Step 4: Getting JSON from our MOO server
+http://yourdomain.com:8080/query.php?objid=$weapons
+Will now return JSON output, something like this (partial): {&quot;data&quot;:[[&quot;13477&quot;,&quot;generic melee weapon&quot;],[&quot;14111&quot;,&quot;shock baton&quot;], This has hopefully given you some hints for exporting this data. Modifying it, in MOO, on the fly, is also possible, with callbacks in datatables, but is more advanced.  If you get the basics working, you&apos;ll see something like an auto paginating page like this:
+
+
+
+
+*Step 5: Security
+Use iptables to ONLY allow requests to query.php, and yourdomain.com:8080 from your own domain. Google this!
+Questions? Comments?
+Post them below!</file><file path="hellcore_64bit.txt">General Tips for compiling Hellcore on 64 bit CentOS and other systems
+
+It is good practice to create a seperate user to run the moo.  You can name it moo, or your own name, or your mother&apos;s name.  You should add this user to the wheel group, so it has access to the sudo command.
+
+Move the hellcore.tar.gz to the home directory of your user.  Extract it into a subfolder, called moo or something.  Run this command:  tar -xvzf hellcore1104.tar.gz
+
+This will unzip the hellcore.  Change directory to the src directory.
+
+Now, setup your 64 bit system to actually be able to compile this beast:
+
+sudo yum install bison
+sudo yum -y install glibc.i686
+sudo yum install libstdc++.i686
+sudo yum install screen
+
+In the src directory run these commands:
+make clean
+make
+
+If you get no &quot;exited with error&quot; message at the end, success, you have won and can now retire.
+
+To start the moo:
+
+screen ./restart hellcore 7777
+CTRL+A+D
+Now you can return to view the screen with screen -r.  If you need to emergency shutdown the MOO, you can resume the screen and press CTRL+C - this will immediately dump everything to hellcore.db.panic!  Handy!</file><file path="hellcore_gmail_routing.txt">Guide: Configuring Hellcore to route email through Gmail&apos;s SMTP servers
+
+After some testing I found out the Gmail configuration I had previously posted only worked to deliver email to gmail.com addresses. Kind of a major flaw. This took me quite some time to fix and should be useful for other applications, like using gmail to send email from a PHP script or C# program.
+
+The problem with Gmail: Gmail expects you to use one of two methods to relay mail through it (for very good reasons). The first is a TLS session, navigated by your average mail program such as postfix or qmail. The second is an SSL session.
+
+The problem with Hellcore: LambdaMOO doesn&apos;t navigate SSL connections, much less set one up mid stream for TLS.
+
+The solution (Hellcore Section):
+
+We will setup a tunnel in the Server Section - for now make sure you don&apos;t have any smtp servers running. If you do, you will need to use a different port.
+
+H1 @set $network.maildrop to &quot;localhost&quot;
+H2 @set $network.maildrop_port to 25
+
+H3 Run this command in your shell:
+perl -MMIME::Base64 -e &apos;print encode_base64(&quot;\000yourusername\@yourdomain.com\000not.my.real.password&quot;)&apos;
+
+Replace the fake values with your own information, then save the string you receive after doing this.
+
+H4 @prop $network.smtp_auth_plain &quot;the string you received from the step above goes here&quot;
+H5 @edit $network:raw_sendmail
+Around line 26, after this line:
+data = {&quot;HELO &quot; + this.site, (&quot;MAIL FROM:&lt;&quot; + this.postmaster) + &quot;&gt;&quot;, (&quot;RCPT TO:&lt;&quot; + address) + &quot;&gt;&quot;, &quot;DATA&quot;};
+Add this line:
+data = {&quot;HELO &quot; + this.site, &quot;AUTH PLAIN &quot;+this.smtp_auth_plain, (&quot;MAIL
+FROM:&lt;&quot; + this.postmaster) + &quot;&gt;&quot;, (&quot;RCPT TO:&lt;&quot; + address) + &quot;&gt;&quot;, &quot;DATA&quot;};
+
+You keep the old line around in case you need to go back to sending via a local smtp server.
+Around line 47, after this line:
+expects = {&quot;220&quot;, &quot;250&quot;, &quot;250&quot;, &quot;250%|251&quot;, &quot;354&quot;, &quot;250&quot;, &quot;221&quot;};
+Add this line:
+expects = {&quot;220&quot;, &quot;250&quot;, &quot;235&quot;, &quot;250&quot;, &quot;250%|251&quot;, &quot;354&quot;, &quot;250&quot;, &quot;221&quot;};
+
+This tells the moocode to expect a sequence of replies that includes authentication.
+
+More Solution (Server Section)
+
+There are two ways to meet gmail&apos;s requirements for security. The first is to connect via an SSL encrypted connection. The second is to negotiate an SSL connection after connecting via an unsecure session. These instructions accomplish the first.
+
+S1 Download, compile, and install stunnel manually or with your favorite package manager.
+
+vi /etc/stunnel/stunnel.conf
+
+Add the following lines to stunnel.conf:
+
+cert = /etc/stunnel/stunnel.pem
+socket = l:TCP_NODELAY=1
+socket = r:TCP_NODELAY=1
+client = yes
+
+[ssmtp]
+accept = 25
+connect = smtp.gmail.com:465
+If you changed the port in step H2, change the accept setting above to match.
+
+As root, execute stunnel, or read this to start it as a service. It will now accept all connections to port 25, encrypt them, and then send them to gmail&apos;s SMTP server.
+
+Almost Too Much Solution (Gmail)
+
+The last, or first thing to do is set everything up with Gmail.
+
+G1 Get signed up with Google Apps. Follow their directions to set up the appropriate MX records.
+
+G2 Add an SPF record as follows:
+@ IN TXT &quot;v=spf1 ip4:AAA.BBB.CCC.DDD include:_spf.google.com ~all&quot;
+
+Replace AAA.BBB.CCC.DDD with the IP address of your moo server. This tells google to allow SMTP connections directly from the moo.
+
+G3 (optional)
+Follow this guide to installing ssmtp and configuring it for gmail. ssmtp is a lightweight relay that will allow you to send mail through gmail from your server. This step is optional.
+
+The overall effect is that all your connections to smtp.gmail.com will be encrypted, removing the need to use the SMTP command STARTTLS. You will receive your email at your google apps page for your domain and send it through google&apos;s smtp servers in a secure way.
+
+There&apos;s no joy like nerd joy, eg the joy I experienced when I finally saw this output after a couple hours of fiddling:</file><file path="mxp_notes.txt">A short guide to implementing MXP on hellcore and notes concerning overall implementation
+
+Fixing $mxp on Hellcore
+
+Hellcore has a utility called $mxp. $mxp:activate is called on a player when that player changes his MXP pref to 1 (@prefs mxp is 1). In $mxp:activate, telnet negotiation codes are sent to the client indicating the server can send MXP. The $mxp implementation doesn&apos;t handle this correctly for Mushclient. In fact it doesn&apos;t really handle it correctly, at all, but we can fake it.
+$mxp:activate should look like this:
+
+
+  who = args[1];
+  this:tell(who, encode_binary(this.code_IAC, this.code_WILL, &quot;[&quot;, 0));
+  this:tell(who, encode_binary(this.code_IAC, this.code_SB, &quot;[&quot;, this.code_IAC,
+this.code_SE, 0));
+  this:tell(who, this.tag_lock_locked_mode);
+  this:define_elements(who);
+ who:tell(&quot;MXP mode activated!&quot;);
+The change to regular hellcore is the second tell, sending DO MXP or something. I also made modification to define_elements. First:
+@prop $mxp.elements {}
+
+$mxp:define_elements should look like this:
+
+
+  who = args[1];
+  this:tell_secure_line(who, $su:from_list(this.elements, &quot;&quot;));
+This allows you to define elements on $mxp.elements.  Here are some example elements formerly hardcoded into $mxp:define_elements:
+
+&lt;!ELEMENT roomexit FLAG=RoomExit&gt;
+
+&lt;!ELEMENT roomnum FLAG=RoomNum&gt;
+
+
+See the MXP spec for details on defining elements, attribute lists, etc. $mxp.elements is where you will store them so they are defined to the user when MXP is turned on.
+Notes on implementing MXP in game
+
+You must use $mxp:tell_secure_line (or $mxp:tell_lines_secure_line for multiple lines) to send text with MXP tags included.  This means you need to detect when MXP is on, figure out when you&apos;re going to be sending MXP, and then tell_secure_line instead of tell in appropriate places.
+
+Then you&apos;ll want to define the MXP to be sent for various things.  I did this by adding props to $thing for instance:
+.mxp_look_place_string - the MXP string to be sent when the item is seen in a room.
+.mxp_inventory_string - the MXP string to be sent when in inventory
+
+And on $creature:
+.mxp_tactical_string - the MXP string to be sent when the creature is listed in the tactical display.
+
+The main use of MXP is to add links or right click menus to in game content.
+Example $exit.mxp_look_place_string:
+&quot;&lt;send&gt;east&lt;/send&gt;&quot;
+When clicked, the east link will send the text between and , which in this case is &quot;east&quot;.
+
+Or, an example weapon mxp_inventory_string:
+ &quot;&lt;weapon&gt;&lt;send href=\&quot;x &amp;text;|wield &amp;text;|remove &amp;text\&quot;&gt;colonial rifle&lt;/send&gt;&lt;/weapon&gt;&quot;
+In this example we use a pre defined element to setup the link color, underlining, bolding etc, and then use the item&apos;s .mxp_inventory_string to define the right click menu.
+
+Examples of some of the changes I made to common functions:
+
+#1:do_examine - if mxp is on print .mxp_examine_menu if it is present and valid
+$room:list_obvious - 1) print an mxp_look_self_menu string if it exists and mxp is on, 2) if mxp is on, use secure lines to tell the description and objects to player, 3) if mxp is on and an mxp_hint_msg exists, print that string
+$room:mxp_list_exits (called from $room:list_exits) - to display mxp formatted exits
+$creature:tell - to send all text in &quot;locked&quot; mode, ignoring mxp tags - when mxp is displayed it must be sent via $mxp:tell_secure_line or $mxp:tell_lines_secure_line
+$thing:look_place_msg - I overrode this, adding an mxp_look_place_string property.  If mxp is on and the string is valid, it returns the string, otherwise passing the results of #1:look_place_msg</file><file path="On_Demand_Room_system_Part1.txt">On Demand Room System
+
+
+Problem:  You have an ASCII/ANSI based MOO that represents many rooms graphically, often.  Storing an object for each room consumes database space.  Database space is loaded into RAM at a cost of approx. (object&apos;s size in bytes) * 2.  On Wayfar, with 9 planets at 100x100, this would be nearly 10,000 objects per planet, almost 100,000 objects just to store blank space.
+
+Solution:  Only store the rooms that players or other objects are using.  Procedurally generate other rooms as required.  The savings are huge!  This is a rough guide to implementing such a system in MOO.  There will be a lot of variation based on your specific gameworld.
+
+Step 1:  Track spawned rooms and delete unused space.
+
+
+On Wayfar, an object named $ods (on demand spawn) is used to track the status of spawned rooms.  The active rooms are stored in a hash property called spawned_rooms.
+
+Each room must have a unique identifier for easy tracking.  I did this by creating a verb to concatenate a string together from the room&apos;s planet/location, and x, y, z co-ordinates.  Example:
+
+$ods:key_string(OBJ room)
+room = args[1];
+key = tostr(room.location, &quot;-&quot;, room.x, &quot;-&quot;, room.y,&quot;-&quot;, room.z);
+return key;
+
+This would return a string along these lines: #4444-1-3--1 for a room located in object #4444 at 1, 3, -1.  This key will let you refer to the active rooms in $ods.spawned_rooms easily.
+
+Next we create a spawning verb for getting the rooms.  This part varies heavily according to how your rooms are setup, and how they are generated.  On Wayfar, we use a simple biome grid generated at planetary creation.  We always know the terrain type for a given X, Y location on a planet, and from that we can generate the appropriate resources and creatures.  This could be improved by proceduralizing all aspects of the room, so that even a despawned room would be re-created exactly from spawn to spawn.  Rough example:
+
+$ods:spawn_3d_room(OBJ location, INT x, INT y, INT z)
+{planet, x, y, z} = args;
+room_key = $ods:key_string(planet,x,y,z);
+&quot;if the room already exists, we can just return it&quot;;
+if(room_key in keys($ods.spawned_rooms))
+  room = $ods.spawned_rooms[room_key];
+  if(gamevalid(room) &amp;&amp; is_a(room,$room))
+    return room;
+  endif
+endif
+&quot;otherwise, we should create a new room and return that&quot;;
+room = $room:populate();
+&quot;on hellcore, that might be: room = $rpg:spawn($room)&quot;;
+room:set_point(x, y, z);
+room:moveto(planet);
+$ods.spawned_rooms[room_key] = room;
+
+Now we need to clean up unused rooms.  Example:
+
+$halfhourly:clean_ods
+rooms = $ou:leaves_suspended($room);
+for r in (rooms)
+yield;
+if(length(r.contents) &lt; 1)
+&quot;you could also add, as we have on Wayfar, a timer check to keep rooms persistent for some period of time&quot;;
+$rpg:junk(r);
+endif
+endfor
+
+Important note:  Once the elements above are implemented for your system, you still need to hook them into the actual movement actions for the player.  I setup some vector based verbs to figure out the rooms I need to be spawning based on the direction the player is moving (on a planet a player can move in any cardinal direction).
+
+This guide will hopefully be expanded as time goes on and I am able to write more examples.</file><file path="perlin2_hellcore.txt">Adding 2d Perlin Noise to Hellcore/LambdaMOO
+
+Add to extensions.c:
+  static int p[512];
+  static int permutation[] = { 151,160,137,91,90,15,
+  131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,
+  21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,
+  35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,
+  74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,
+  230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,
+  80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,
+  164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,
+  118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,
+  183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,
+  172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,
+  218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,
+  145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,
+  115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,
+  141,128,195,78,66,215,61,156,180
+  };
+  /* Function declarations */
+  double fade(double t);
+  double lerp(double t, double a, double b);
+  double grad(int hash, double x, double y, double z);
+  void init_noise();
+  double pnoise(double x, double y, double z);
+  void init_noise()
+  {
+  int i;
+  for(i = 0; i &lt; 256 ; i++)
+  p[256+i] = p[i] = permutation[i];
+  }
+  double pnoise(double x, double y, double z)
+  {
+  int X = (int)floor(x) &amp; 255, /* FIND UNIT CUBE THAT */
+  Y = (int)floor(y) &amp; 255, /* CONTAINS POINT. */
+  Z = (int)floor(z) &amp; 255;
+  x -= floor(x); /* FIND RELATIVE X,Y,Z */
+  y -= floor(y); /* OF POINT IN CUBE. */
+  z -= floor(z);
+  double u = fade(x), /* COMPUTE FADE CURVES */
+  v = fade(y), /* FOR EACH OF X,Y,Z. */
+  w = fade(z);
+  int A = p[X]+Y,
+  AA = p[A]+Z,
+  AB = p[A+1]+Z, /* HASH COORDINATES OF */
+  B = p[X+1]+Y,
+  BA = p[B]+Z,
+  BB = p[B+1]+Z; /* THE 8 CUBE CORNERS, */
+  return lerp(w,lerp(v,lerp(u, grad(p[AA ], x, y, z), /* AND ADD */
+  grad(p[BA ], x-1, y, z)), /* BLENDED */
+  lerp(u, grad(p[AB ], x, y-1, z), /* RESULTS */
+  grad(p[BB ], x-1, y-1, z))), /* FROM 8 */
+  lerp(v, lerp(u, grad(p[AA+1], x, y, z-1 ),/* CORNERS */
+  grad(p[BA+1], x-1, y, z-1)), /* OF CUBE */
+  lerp(u, grad(p[AB+1], x, y-1, z-1),
+  grad(p[BB+1], x-1, y-1, z-1))));
+  }
+  double fade(double t){ return t * t * t * (t * (t * 6 - 15) + 10); }
+  double lerp(double t, double a, double b){ return a + t * (b - a); }
+  double grad(int hash, double x, double y, double z)
+  {
+  int h = hash &amp; 15; /* CONVERT LO 4 BITS OF HASH CODE */
+  double u = h &lt; 8 ? x : y, /* INTO 12 GRADIENT DIRECTIONS. */
+  v = h &lt; 4 ? y : h==12||h==14 ? x : z;
+  return ((h&amp;1) == 0 ? u : -u) + ((h&amp;2) == 0 ? v : -v);
+  }
+  int noise2d(int x, int y, double scalex, double scaley, int size) {
+  double xf = (double)x;
+  double yf = (double)y;
+  double sizef = (double)size;
+  double noiseval = pnoise(xf/(sizef * scalex), yf/(sizef * scaley), 0.5);
+  noiseval = sizef * ((noiseval + 1.0)/2.0);
+  return (int)noiseval;
+  }
+  int fbm2d(int x, int y, double scalex, double scaley, int size, int octaves)
+    
+  double xf = (double)x;
+  double yf = (double)y;
+  double sizef = (double)size;
+  double noiseval = 0.0;
+  int i;
+  for(i = 1; i &lt;= octaves; i++) {
+  double n = pnoise(i * xf/(sizef * scalex), i * yf/(sizef * scaley), 0.5);
+  n = sizef * ((n/2.0) + 0.5);
+  noiseval = noiseval + n / (double)i;
+  }
+  return (int)noiseval;
+  }
+  static package bf_perlin_2d(Var arglist, Byte next, void *vdata, Objid progr)
+  {
+  Var r;
+  int x = (int)arglist.v.list[1].v.num;
+  int y = (int)arglist.v.list[2].v.num;
+  double alpha = *arglist.v.list[3].v.fnum;
+  double beta = *arglist.v.list[4].v.fnum;
+  int n = (int)arglist.v.list[5].v.num;
+  int octaves = (int)arglist.v.list[6].v.num;
+  init_noise();
+  r.v.num = (int)fbm2d(x, y, alpha, beta, n, octaves);
+  r.type = TYPE_INT;
+  free_var(arglist);
+  return make_var_pack(r);
+  }
+
+Add to void register_extensions() in extensions.c:
+  register_function(&quot;perlin_2d&quot;, 6, 6, bf_perlin_2d, TYPE_INT,
+  TYPE_INT, TYPE_FLOAT, TYPE_FLOAT, TYPE_INT, TYPE_INT);
+
+How to use: you have a list of biomes or room types. You get a size from this and then call this function:
+biomes = {&quot;flatland&quot;,&quot;forest&quot;,&quot;mountain&quot;};
+
+size = length(biomes);
+px = 10;
+py = 33;
+alpha = 1.0;
+beta = 1.5;
+octaves = 1;
+
+index = perlin_2d(px, py, alpha, beta, size, octaves);
+
+ alpha, and beta are floats that affect the jagged/smoothness of the generated area.  octaves runs the noise function multiple times - WARNING - if you have a set number, for instance when selecting a list of biomes, this will cause values to fall outside the range of the list you&apos;ve created.  For instance using multiple octaves with the list of 3 biomes above would result in many values at x, y co-ordinates of 4-8.  If you&apos;re using the noise to set altitude, you may wish to use the octave setting.
+
+If you want to generate an entire map you would call this function repeatedly over the size of your map. Or, more usefully, you call it when a specific co-ordinate is needed. As long as the input to perlin_2d is the same, the index return will always be the same.</file><file path="writing_useable_item_hellcore.txt">How to write a useable item in Hellcore/Wayfar
+
+Requires basic knowledge of object creation - please reference the LambdaMOO programmer&apos;s guide.
+
+Step 1: create the item from an appropriate parent.
+
+Step 2: add a verb on the item for the player to kick off the action, it should look like this:
+
+@verb #itemid:use this none none
+1: if(this.location != player)
+2: return player:tell(&quot;You have to be holding this to use it!&quot;);
+3: else
+4: player:queue_action($actions.use, {this, #-1}, 1, &quot;use &quot;+this:name());
+5: endif
+
+Step 3: Write two new verbs on the item to handle the use action:
+
+do_use_start(OBJ who, OBJ on)
+do_use_finish(OBJ who, OBJ on)
+
+In our example we are just using the item, we aren&apos;t using it on anything.  This would need a more complex verb on the item in the form of:
+@verb #itemid use this on any
+
+And then you&apos;d need to match the any against and item or person.</file></files></repomix>
