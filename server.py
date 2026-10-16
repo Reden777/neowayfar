@@ -17,6 +17,8 @@ PORT = 60025
 clients: Set[Tuple[str, int]] = set()
 client_nicknames: Dict[Tuple[str, int], str] = {}
 client_locations: Dict[Tuple[str, int], Tuple[str, int, int]] = {}  # addr -> (planet_id, x, y)
+client_space_locations: Dict[Tuple[str, int], Tuple[int, int]] = {}  # addr -> orbital grid coordinates
+timed_tool_actions: Dict[Tuple[str, int], Dict[str, Any]] = {}
 client_inventories: Dict[Tuple[str, int], Dict[str, str]] = {}
 client_stacks: Dict[Tuple[str, int], Dict[str, int]] = {}
 client_container_contents: Dict[Tuple[str, int], Dict[str, Dict[str, int]]] = {}
@@ -41,7 +43,7 @@ RECIPES = {
     "wilder javelin": ("basic crafting tool", {"wood": 1, "fiber": 1}, "melee weapon"),
     "colonial rifle": ("equipment crafting tool", {"inert metal fragment": 1, "inert wiring": 1, "weak power emitter": 1}, "ranged weapon"),
     "cheap orgo-reaper": ("equipment crafting tool", {"inert metal fragment": 1, "fiber": 1}, "harvesting tool"),
-    "atmo-thrasher condenser": ("equipment crafting tool", {"inert metal fragment": 1, "weak power emitter": 1}, "harvesting tool"),
+    "atmo-thrasher condenser": ("equipment crafting tool", {"inert metal fragment": 2, "weak power emitter": 1}, "harvesting tool"),
     "q-osmose energy collector": ("equipment crafting tool", {"inert metal fragment": 1, "weak power emitter": 1}, "harvesting tool"),
     "terrain surveyor": ("equipment crafting tool", {"inert metal fragment": 1, "inert wiring": 1}, "special weapon"),
     "hide armor": ("equipment crafting tool", {"hide": 2, "fiber": 1}, "armour"),
@@ -78,15 +80,28 @@ RECIPES = {
 }
 
 RESOURCE_BY_BIOME = {
+    "underwater": ("water", "pressure-grown pearl", "bioluminescent spore", "alkali crust"),
     "forest": ("wood", "native lumber", "fiber", "hide", "fungal spores", "neuro-aligned fiber", "energy", "plant matter"),
+    "jungle": ("native lumber", "native fiber", "fiber", "fungal spores", "neuro-aligned fiber", "adaptive-phase fiber", "plant matter", "hide", "energy"),
+    "mountain": ("inert metal fragment", "inert block", "solid-phase metal", "solid-phase conduit", "solid-phase hull plate", "copper wire strand", "energy"),
+    "fungal_zone": ("fungal spores", "volatile fungal spores", "native fiber", "adaptive-phase fiber", "fiber", "bioluminescent spore", "plant matter"),
+    "volcanic": ("heat-resistant alloy nodule", "inert metal fragment", "solid-phase metal", "thermal kretherson", "energy", "fused silicate"),
+    "pink_desert": ("rose quartz crystal", "pink silicate", "water", "energy", "sand"),
     "grassland": ("fiber", "wood", "native lumber", "hide", "fungal spores", "neuro-aligned fiber", "energy", "plant matter"),
     "marsh": ("fiber", "water", "fungal spores", "plant matter", "energy"),
     "water": ("water", "fiber"),
     "desert": ("inert metal fragment", "inert block", "water", "sand", "energy"),
     "canyon": ("inert metal fragment", "inert block", "copper wire strand", "solid-phase metal", "responsive metal", "energy"),
     "rocky": ("inert metal fragment", "inert block", "copper wire strand", "solid-phase metal", "responsive metal", "energy"),
-    "metallic_wasteland": ("inert metal fragment", "copper wire strand", "inert block", "solid-phase metal", "inert casing", "inert beam", "inert siding", "responsive metal", "energy", "blank IC chip"),
+    "metallic_wasteland": ("inert metal fragment", "copper wire strand", "inert block", "solid-phase metal", "solid-phase conduit", "inert casing", "inert beam", "inert siding", "responsive metal", "energy", "weak power emitter", "light starship power core", "weaponry power bank", "inert superstructure", "solid-phase hull plate", "light ion engine", "cargo bay", "blank IC chip"),
     "crystalline": ("water", "fungal spores", "inert block"),
+    "water": ("water", "pressure-grown pearl", "bioluminescent spore", "alkali crust"),
+}
+RESOURCE_YIELD_BY_BIOME = {
+    "forest": 5, "jungle": 7, "grassland": 4, "underwater": 3, "water": 3,
+    "marsh": 4, "fungal_zone": 4, "desert": 2, "pink_desert": 2,
+    "canyon": 3, "rocky": 3, "mountain": 2, "metallic_wasteland": 4,
+    "volcanic": 2, "crystalline": 3,
 }
 
 EQUIPMENT_PRODUCTS = {
@@ -227,6 +242,7 @@ for catalog, catalog_tool in ((EQUIPMENT_PRODUCTS, "equipment crafting tool"), (
 STRUCTURE_NAMES = {name for data in (STRUCTURE_PRODUCTS, ADVANCED_STRUCTURE_PRODUCTS, DEFENSIVE_PRODUCTS) for category, products in data.items() if category in ("building", "automated harvester") for name in products}
 RECIPE_COMPLEXITY = {"equipment crafting tool": 10.0, "engineering tool": 10.0, "structure crafting tool": 15.0}
 RECIPE_COMPLEXITY.update({name: data[3] for name, data in EXACT_RECIPES.items() if data[3] is not None})
+RECIPE_COMPLEXITY["atmo-thrasher condenser"] = 10.0
 
 MATERIAL_ALIASES = {"inert metal": "inert metal fragment", "any energy": "energy"}
 
@@ -297,7 +313,22 @@ SKILLS = {skill.lower(): {"name": skill, "group": group, "cost": cost, "requires
 
 
 def get_profile(nickname: str) -> Dict[str, Any]:
-    return player_profiles.setdefault(nickname, {"background": None, "progress": 0, "reroll_points": 0, "completed": set(), "wildlife_kills": 0, "crafted_count": 0, "buildings": [], "skills": set(), "skill_points": 0, "skill_point_cap": 2500, "bigmap": False, "ansi": True, "health": 100, "scavenged_pois": set()})
+    return player_profiles.setdefault(nickname, {"background": None, "progress": 0, "reroll_points": 0, "completed": set(), "wildlife_kills": 0, "crafted_count": 0, "buildings": [], "skills": set(), "skill_points": 0, "skill_point_cap": 2500, "bigmap": False, "ansi": True, "health": 100, "scavenged_pois": set(), "ships": []})
+
+
+SHIP_BLUEPRINTS = {
+    "pioneer skiff": {"description": "A lightly equipped one-person planetary craft.", "ingredients": {"inert metal fragment": 4, "inert wiring": 2, "weak power emitter": 2}},
+    "survey cutter": {"description": "A durable survey craft with room for equipment and supplies.", "ingredients": {"inert metal fragment": 8, "inert wiring": 4, "weak power emitter": 3, "solid-phase metal": 2}},
+    "asteroid miner": {"description": "A lop-sided, blocky Central Complex budget ship built to exploit asteroid minerals. It is the only spacecraft that can fit a gas harvesting module.", "ingredients": {"solid-phase conduit": 2, "native fiber": 3, "energy": 17, "solid-phase metal": 1, "light starship power core": 1, "weak power emitter": 2, "inert metal fragment": 10, "inert wiring": 4, "weaponry power bank": 2, "responsive metal": 3, "inert casing": 2, "adaptive-phase fiber": 6, "inert superstructure": 1, "thermal kretherson": 5, "solid-phase hull plate": 4, "light ion engine": 1, "cargo bay": 1}},
+}
+SHIP_ASSEMBLY_TOOL = "experimental starship assembly tool"
+RECIPES["asteroid miner"] = (SHIP_ASSEMBLY_TOOL, SHIP_BLUEPRINTS["asteroid miner"]["ingredients"], "starship")
+RECIPES["gas harvesting module"] = ("engineering tool", {"weak power emitter": 2, "responsive metal": 1, "inert wiring": 2}, "starship module")
+
+
+def ship_brief(ship: Dict[str, Any]) -> str:
+    state = "in orbit" if ship.get("in_space") else "landed"
+    return f"{ship['name'].title()} ({state})"
 
 
 def award_skillpoints(nickname: str, amount: int):
@@ -356,6 +387,16 @@ def send_look(address: Tuple[str, int], server_socket: socket.socket):
 
     nickname = client_nicknames.get(address, "Traveler")
     profile = get_profile(nickname)
+    hazard_notice = ""
+    hazard = room.biome.get("hazard")
+    if hazard:
+        visited = profile.setdefault("hazard_visits", set())
+        visit_key = (planet_id, x, y)
+        if visit_key not in visited:
+            visited.add(visit_key)
+            damage = random.randint(3, 7) if hazard == "spores" else random.randint(5, 12)
+            profile["health"] = max(1, profile["health"] - damage)
+            hazard_notice = f"\nHazard: {hazard.title()} exposure deals {damage} damage. Health: {profile['health']}/100."
     if room.poi_kind == "droid factory" and not room.poi_active and address in client_nicknames:
         room.poi_active = True
         for droid in room.hostile_droids:
@@ -370,7 +411,7 @@ def send_look(address: Tuple[str, int], server_socket: socket.socket):
     display_output = format_side_by_side(map_rows, room, nickname, other_people)
     if not use_ansi:
         display_output = strip_ansi(display_output)
-    display_output += f"\nHealth: {profile['health']}/100."
+    display_output += f"\nHealth: {profile['health']}/100.{hazard_notice}"
 
     server_socket.sendto(display_output.encode('utf-8'), address)
 
@@ -403,8 +444,14 @@ def handle_disconnect(address: Tuple[str, int], server_socket: socket.socket):
     if address in clients:
         nickname = client_nicknames.get(address, "A traveler")
         planet_id, x, y = client_locations.get(address, (DEFAULT_PLANET, 0, 0))
+        active_ship = next((item for item in get_profile(nickname).get("ships", []) if item.get("active")), None)
+        if active_ship and address in client_space_locations:
+            active_ship["in_space"] = False
+            active_ship.pop("origin", None)
         clients.remove(address)
         client_locations.pop(address, None)
+        client_space_locations.pop(address, None)
+        timed_tool_actions.pop(address, None)
         client_nicknames.pop(address, None)
         client_inventories.pop(address, None)
         client_stacks.pop(address, None)
@@ -457,6 +504,128 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
         else:
             for recipient in list(clients):
                 server_socket.sendto(f"[Chatnet] {nickname}: {message}".encode("utf-8"), recipient)
+        return
+
+    if cmd in ("ships", "ship", "board", "launch", "land", "fly"):
+        profile = get_profile(nickname)
+        ships = profile.setdefault("ships", [])
+        subcommand = cmd if cmd != "ship" else (args[0].lower() if args else "list")
+        ship_args = args if cmd != "ship" else args[1:]
+        active = next((item for item in ships if item.get("active")), None)
+        if subcommand in ("ships", "list"):
+            response = "Your ships: " + (", ".join(ship_brief(item) for item in ships) if ships else "none")
+            response += f"\nBlueprints: {', '.join(SHIP_BLUEPRINTS)}. Build: ship build <blueprint>."
+        elif subcommand == "build":
+            requested = " ".join(ship_args).lower().strip()
+            blueprint = SHIP_BLUEPRINTS.get(requested)
+            if not blueprint:
+                response = f"Unknown ship blueprint. Available: {', '.join(SHIP_BLUEPRINTS)}."
+            elif SHIP_ASSEMBLY_TOOL not in client_inventories.get(address, {}):
+                response = f"You need an {SHIP_ASSEMBLY_TOOL} to assemble ships."
+            else:
+                missing = [f"{count} {name}" for name, count in blueprint["ingredients"].items() if carried_quantity(address, name) < count]
+                if missing:
+                    response = "You need: " + ", ".join(missing) + "."
+                else:
+                    consume_materials(address, blueprint["ingredients"])
+                    ship = {"name": requested, "description": blueprint["description"], "active": not active, "in_space": False, "modules": []}
+                    ships.append(ship)
+                    award_skillpoints(nickname, 10)
+                    response = f"The assembly tool finishes your {requested}." + (" It is now your active ship." if ship["active"] else " Board it with 'board <name>'.")
+        elif subcommand == "board":
+            target = " ".join(ship_args).lower().strip()
+            ship = next((item for item in ships if item["name"] == target), None)
+            if not ship:
+                response = "You don't own that ship. Use 'ships' to list your fleet."
+            elif address in client_space_locations:
+                response = "You are already aboard a ship in orbit. Land first."
+            else:
+                for item in ships:
+                    item["active"] = item is ship
+                active = ship
+                response = f"You board your {ship['name']}. {ship['description']}"
+        elif subcommand == "fit":
+            module = " ".join(ship_args).lower().strip()
+            if not active:
+                response = "You need to board one of your ships before fitting a module."
+            elif address in client_space_locations:
+                response = "Land your ship before fitting modules."
+            elif module != "gas harvesting module":
+                response = "Available ship module: gas harvesting module."
+            elif active["name"] != "asteroid miner":
+                response = "Only the Asteroid Miner has fittings for a gas harvesting module."
+            elif module not in client_inventories.get(address, {}):
+                response = "You need to carry a gas harvesting module to fit it. Craft one with 'craft gas harvesting module'."
+            elif module in active.setdefault("modules", []):
+                response = "Your Asteroid Miner already has a gas harvesting module fitted."
+            else:
+                consume_materials(address, {module: 1})
+                active["modules"].append(module)
+                response = "You fit the gas harvesting module to your Asteroid Miner. Launch and use 'ship harvest gas' to collect volatile gas."
+        elif subcommand == "harvest":
+            target = " ".join(ship_args).lower().strip()
+            if target != "gas":
+                response = "Use 'ship harvest gas' while in orbit."
+            elif not active or active["name"] != "asteroid miner":
+                response = "Only an Asteroid Miner can harvest gas."
+            elif "gas harvesting module" not in active.get("modules", []):
+                response = "Your Asteroid Miner needs a fitted gas harvesting module."
+            elif address not in client_space_locations:
+                response = "Launch into orbit before harvesting gas."
+            else:
+                inventory = client_inventories[address]
+                stacks = client_stacks[address]
+                inventory["volatile gas"] = "Volatile gas collected by a gas harvesting module."
+                stacks["volatile gas"] = stacks.get("volatile gas", 0) + 1
+                response = "The gas harvesting module draws a canister of volatile gas from the surrounding field."
+        elif subcommand in ("launch", "fly", "land"):
+            if not active:
+                response = "You need an active ship. Use 'board <name>' or assemble one with 'ship build <blueprint>'."
+            elif subcommand == "launch":
+                if address in client_space_locations:
+                    response = "Your ship is already in orbit."
+                else:
+                    client_space_locations[address] = (0, 0)
+                    active["in_space"] = True
+                    active["origin"] = client_locations.get(address, (planet_id, x, y))
+                    response = f"You lift your {active['name']} into orbit above {planet_id}. Use 'fly <direction>' to maneuver or 'land' to return."
+                    if profile.get("background") == "student" and "student" not in profile["completed"]:
+                        profile["completed"].add("student")
+                        profile["reroll_points"] += BACKGROUNDS["student"]["reward"]
+                        response += " Student background complete! You earned 1 reroll point."
+            elif subcommand == "land":
+                if address not in client_space_locations:
+                    response = "Your ship is already landed."
+                else:
+                    client_space_locations.pop(address, None)
+                    active["in_space"] = False
+                    origin = active.pop("origin", None)
+                    if origin:
+                        client_locations[address] = origin
+                        planet_id, x, y = origin
+                    response = f"Your {active['name']} lands on {planet_id}."
+                    server_socket.sendto(response.encode("utf-8"), address)
+                    send_look(address, server_socket)
+                    return
+            else:
+                direction = " ".join(ship_args).lower().strip()
+                deltas = {"n": (0, -1), "north": (0, -1), "ne": (1, -1), "northeast": (1, -1), "e": (1, 0), "east": (1, 0), "se": (1, 1), "southeast": (1, 1), "s": (0, 1), "south": (0, 1), "sw": (-1, 1), "southwest": (-1, 1), "w": (-1, 0), "west": (-1, 0), "nw": (-1, -1), "northwest": (-1, -1)}
+                if address not in client_space_locations:
+                    response = "Launch first before maneuvering in space."
+                elif direction not in deltas:
+                    response = "Use 'fly n|ne|e|se|s|sw|w|nw' to maneuver."
+                else:
+                    sx, sy = client_space_locations[address]
+                    dx, dy = deltas[direction]
+                    client_space_locations[address] = (sx + dx, sy + dy)
+                    response = f"You pilot the {active['name']} to orbital coordinates [{sx + dx}, {sy + dy}]."
+        else:
+            response = "Ship commands: ships, ship build <blueprint>, board <name>, ship fit <module>, launch, fly <direction>, land, ship harvest gas."
+        server_socket.sendto(response.encode("utf-8"), address)
+        return
+
+    if address in client_space_locations:
+        server_socket.sendto(b"You are aboard your ship in orbit. Use 'fly <direction>' or 'land'.", address)
         return
 
     if cmd == "page":
@@ -618,14 +787,44 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
 
     if cmd == "gather":
         resource_query = " ".join(args).lower().strip()
-        resource_keys = [item for item in RESOURCE_BY_BIOME.get(room.biome_key, ()) if item not in room.items]
-        match = next((item for item in resource_keys if not resource_query or resource_query in item), None)
+        yield_limit = RESOURCE_YIELD_BY_BIOME.get(room.biome_key, 2)
+        resource_keys = [item for item in RESOURCE_BY_BIOME.get(room.biome_key, ())
+                         if room.resource_gathered.get(item, 0) < yield_limit
+                         and (not resource_query or resource_query in item)]
+        match = random.choice(resource_keys) if resource_keys else None
         if match:
+            room.resource_gathered[match] = room.resource_gathered.get(match, 0) + 1
             client_inventories[address][match] = f"A gathered quantity of {match}."
             client_stacks[address][match] = client_stacks[address].get(match, 0) + 1
-            server_socket.sendto(f"You gather {match} from the {room.biome_key} terrain.".encode("utf-8"), address)
+            remaining = max(0, yield_limit - room.resource_gathered[match])
+            server_socket.sendto(f"You gather {match} from the {room.biome['name']} terrain ({remaining} more unit(s) of this resource available here).".encode("utf-8"), address)
         else:
             server_socket.sendto(f"You find no gatherable {resource_query or 'materials'} here. Try another biome or coordinate.".encode("utf-8"), address)
+        return
+
+    if cmd in ("harvest", "survey"):
+        tool = "atmo-thrasher condenser"
+        if tool not in client_inventories.get(address, {}):
+            response = "You need an atmo-thrasher condenser. Craft one with an equipment crafting tool."
+        elif address in client_space_locations:
+            response = "The condenser needs a planetary atmosphere; land before using it."
+        elif address in timed_tool_actions:
+            response = "The condenser is already working."
+        elif cmd == "harvest" and " ".join(args).lower().strip() not in ("", "water", "unpurified water"):
+            response = "The atmo-thrasher condenser harvests unpurified water. Use 'harvest water'."
+        else:
+            duration = 5.0 if cmd == "harvest" else 10.0
+            timed_tool_actions[address] = {
+                "kind": cmd,
+                "completes_at": time.time() + duration,
+                "location": client_locations[address],
+                "nickname": nickname,
+            }
+            if cmd == "harvest":
+                response = "The atmo-thrasher condenser begins siphoning atmospheric moisture. One unit of unpurified water will be ready in 5.0 seconds; biological hazards may remain."
+            else:
+                response = "The atmo-thrasher condenser begins its 10.0-second survey."
+        server_socket.sendto(response.encode("utf-8"), address)
         return
 
     if cmd in ("build", "construct"):
@@ -704,8 +903,18 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
                 response = "You need: " + ", ".join(missing) + ". Gather materials with 'gather' or loot them from the terrain."
             else:
                 consume_materials(address, ingredients)
-                inventory[product] = f"A hand-crafted {product}."
-                stacks[product] = stacks.get(product, 0) + 1
+                crafted_ship = product in SHIP_BLUEPRINTS
+                if crafted_ship:
+                    profile = get_profile(nickname)
+                    active_ship = next((item for item in profile.setdefault("ships", []) if item.get("active")), None)
+                    ship = {"name": product, "description": SHIP_BLUEPRINTS[product]["description"], "active": not active_ship, "in_space": False, "modules": []}
+                    profile["ships"].append(ship)
+                else:
+                    if product == "atmo-thrasher condenser":
+                        inventory[product] = ("A small transparent canteen-shaped atmospheric condenser. It forms thin bladders of unpurified water; biological hazards may remain. Use 'harvest water' or 'survey'.")
+                    else:
+                        inventory[product] = f"A hand-crafted {product}."
+                    stacks[product] = stacks.get(product, 0) + 1
                 award_skillpoints(nickname, 2)
                 quality = 75
                 progress = ""
@@ -722,7 +931,10 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
                         else:
                             progress = f" Fabricator progress: {profile['progress']}/{bg['target']} products at quality 70+."
                 complexity = f" (complexity {RECIPE_COMPLEXITY[product]:.1f})" if product in RECIPE_COMPLEXITY else ""
-                response = f"You craft {product} with {available_tool}{complexity} (quality {quality})." + progress
+                if crafted_ship:
+                    response = f"You craft the {product} with {available_tool}{complexity}. It is added to your fleet." + (" It is now your active ship." if ship["active"] else " Board it with 'board asteroid miner'.") + progress
+                else:
+                    response = f"You craft {product} with {available_tool}{complexity} (quality {quality})." + progress
         server_socket.sendto(response.encode("utf-8"), address)
         return
 
@@ -811,6 +1023,31 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
             target = " ".join(args).lower()
             if target.startswith("at "):
                 target = target[3:]
+            look_directions = {
+                "n": (0, -1, "north"), "north": (0, -1, "north"),
+                "ne": (1, -1, "northeast"), "northeast": (1, -1, "northeast"),
+                "e": (1, 0, "east"), "east": (1, 0, "east"),
+                "se": (1, 1, "southeast"), "southeast": (1, 1, "southeast"),
+                "s": (0, 1, "south"), "south": (0, 1, "south"),
+                "sw": (-1, 1, "southwest"), "southwest": (-1, 1, "southwest"),
+                "w": (-1, 0, "west"), "west": (-1, 0, "west"),
+                "nw": (-1, -1, "northwest"), "northwest": (-1, -1, "northwest"),
+            }
+            if target in look_directions:
+                dx, dy, direction = look_directions[target]
+                nx, ny = (x + dx) % 100, (y + dy) % 100
+                neighbor = ods.get_room(planet_id, nx, ny)
+                detail = f"To the {direction}: [{nx}, {ny}] is {neighbor.biome['name']} biome."
+                if neighbor.biome.get("hazard"):
+                    detail += f" Warning: this is a hazardous area ({neighbor.biome['hazard']})."
+                if neighbor.creatures:
+                    detail += " Signs of wildlife: " + ", ".join(neighbor.creatures) + "."
+                if neighbor.event:
+                    detail += " " + neighbor.event
+                if neighbor.items:
+                    detail += " Visible discoveries: " + ", ".join(neighbor.items) + "."
+                server_socket.sendto(detail.encode("utf-8"), address)
+                return
             profile = get_profile(nickname)
             container = next((name for name in client_container_contents.get(address, {}) if target == name or target in name), None)
             if container:
@@ -1089,15 +1326,17 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
         help_msg = (
             f"{BOLD}Wayfar 1444 Command Index:{RESET}\n"
             f"  {FG_CYAN}Movement:{RESET} n, ne, e, se, s, sw, w, nw (8 cardinal directions)\n"
-            f"  {FG_CYAN}Tactical Map:{RESET} l or look; map big|small, bigmap toggle, ansi on|off, blind on|off\n"
+            f"  {FG_CYAN}Tactical Map:{RESET} l or look; look <direction> scouts adjacent biome; map big|small, bigmap toggle, ansi on|off, blind on|off\n"
             f"  {FG_CYAN}Spawn Status:{RESET} $ods (displays active on demand rooms and cache)\n"
             f"  {FG_CYAN}Interplanetary:{RESET} planets, shuttle <planet_name>\n"
+            f"  {FG_CYAN}Starships:{RESET} ships, craft or ship build <blueprint>, board <name>, ship fit <module>, launch, fly <direction>, land, ship harvest gas\n"
             f"  {FG_CYAN}Interaction:{RESET} look at <target>, take <item>, drop <item>, i (inventory)\n"
             f"  {FG_CYAN}Creatures:{RESET} pet <critter>, feed <critter>, attack <critter>\n"
             f"  {FG_CYAN}Backgrounds:{RESET} background list, background select <name>, background status (includes Scavenger)\n"
             f"  {FG_CYAN}Skills:{RESET} score, skills [group or name], learn <skill name>\n"
             f"  {FG_CYAN}Improvisation:{RESET} improvise, improvise on <tool>, improvise <product> on <tool> (requires Improvisation skill)\n"
             f"  {FG_CYAN}Crafting:{RESET} craft <product>, build <building>, datapad <query>, gather [material]\n"
+            f"  {FG_CYAN}Tools:{RESET} harvest water and survey (atmo-thrasher condenser; 5s harvest, 10s survey)\n"
             f"  {FG_CYAN}Colony:{RESET} buildings, sectormap, resources, colony\n"
             f"  {FG_CYAN}Exploration:{RESET} [] marks a droid factory point of interest; defeat its robots, then scavenge\n"
             f"  {FG_CYAN}Social:{RESET} say <text>, emote <action>, sit <item>, exit"
@@ -1111,6 +1350,38 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
 
     # Fallback
     server_socket.sendto(f"Unknown command: '{cmd}'. Type 'help' for instructions.".encode('utf-8'), address)
+
+
+def complete_timed_tool_actions(server_socket: socket.socket, now: float):
+    """Finish condenser work without blocking the UDP server loop."""
+    for address, action in list(timed_tool_actions.items()):
+        if now < action["completes_at"]:
+            continue
+        timed_tool_actions.pop(address, None)
+        if address not in clients:
+            continue
+        if client_locations.get(address) != action["location"]:
+            message = "The condenser survey is interrupted because you left the area." if action["kind"] == "survey" else "The condenser harvest is interrupted because you left the area."
+        elif action["kind"] == "harvest":
+            inventory = client_inventories.get(address, {})
+            stacks = client_stacks.get(address, {})
+            inventory["water"] = "Unpurified water condensed from atmospheric moisture. Physical impurities were removed, but biological hazards may remain."
+            stacks["water"] = stacks.get("water", 0) + 1
+            message = "The condenser forms one bladder of unpurified water. Physical impurities were removed, but biological hazards may remain."
+        else:
+            planet_id, x, y = action["location"]
+            room = ods.get_room(planet_id, x, y)
+            resources = ", ".join(RESOURCE_BY_BIOME.get(room.biome_key, ())) or "none recorded"
+            wildlife = ", ".join(room.creatures) or "no wildlife spotted"
+            message = f"Survey complete: {room.biome['name']} biome at [{x}, {y}] on {planet_id}. Resources: {resources}. Wildlife: {wildlife}."
+            if room.biome.get("hazard"):
+                message += f" Hazard detected: {room.biome['hazard']}."
+            if room.event:
+                message += " " + room.event
+        try:
+            server_socket.sendto(message.encode("utf-8"), address)
+        except OSError:
+            pass
 
 
 def main():
@@ -1135,6 +1406,8 @@ def main():
                 pass
             except Exception as ex:
                 print(f"Server exception: {ex}")
+
+            complete_timed_tool_actions(server_socket, time.time())
 
             # Periodic cleanup of unused spawned rooms ($ODS)
             now = time.time()

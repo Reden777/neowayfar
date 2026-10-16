@@ -53,9 +53,9 @@ def main():
         known_commands = {
             'l', 'look', 'n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw',
             'north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest',
-            '$ods', 'ods', 'planets', 'shuttle', 'planet', 'take', 'drop',
+            '$ods', 'ods', 'planets', 'shuttle', 'planet', 'ships', 'ship', 'board', 'launch', 'land', 'fly', 'take', 'drop',
             'i', 'inv', 'inventory', 'pet', 'feed', 'attack', 'sit', 'background', 'backgrounds',
-            'craft', 'build', 'construct', 'datapad', 'lookup', 'gather', 'score', 'skills', 'skill', 'learn', 'improvise',
+            'craft', 'build', 'construct', 'datapad', 'lookup', 'gather', 'harvest', 'survey', 'score', 'skills', 'skill', 'learn', 'improvise',
             'buildings', 'sectormap', 'resources', 'colony',
             'map', 'bigmap', 'ansi', 'blind', 'scavenge',
             'emote', ':', 'say', "'", 'help'

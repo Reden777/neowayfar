@@ -88,6 +88,30 @@ BIOMES = {
         "bg": BG_MAGENTA,
         "fg": FG_WHITE,
         "char_options": ["::", "00", "..", "  "]
+    },
+    "underwater": {
+        "name": "underwater", "bg": BG_BLUE, "fg": FG_CYAN,
+        "char_options": ["~~", "00", "..", "  "]
+    },
+    "jungle": {
+        "name": "jungle", "bg": "\033[42m", "fg": FG_YELLOW,
+        "char_options": ["##", "00", "..", "  "]
+    },
+    "mountain": {
+        "name": "mountain", "bg": BG_WHITE, "fg": FG_BLUE,
+        "char_options": ["^^", "##", "00", "  "]
+    },
+    "fungal_zone": {
+        "name": "fungal zone", "bg": BG_MAGENTA, "fg": FG_CYAN,
+        "char_options": ["**", "::", "00", "  "], "hazard": "spores"
+    },
+    "volcanic": {
+        "name": "volcanic", "bg": BG_RED, "fg": FG_YELLOW,
+        "char_options": ["^^", "**", "##", "  "], "hazard": "extreme heat"
+    },
+    "pink_desert": {
+        "name": "pink desert", "bg": BG_MAGENTA, "fg": FG_WHITE,
+        "char_options": ["..", "::", "  "]
     }
 }
 
@@ -99,7 +123,7 @@ PLANETS = {
         "start_pos": (24, 21),
         "scale_x": 7.5,
         "scale_y": 7.5,
-        "biomes": ["water", "forest", "grassland", "rocky", "metallic_wasteland"],
+        "biomes": ["underwater", "forest", "forest", "forest", "grassland", "grassland", "jungle", "jungle", "mountain", "rocky", "metallic_wasteland"],
         "creatures": ["muta-chicken", "wire asp", "feral drone", "rust hound", "spore crab"],
         "items": ["inert metal fragment", "copper wire strand", "broken sensor"]
     },
@@ -109,7 +133,7 @@ PLANETS = {
         "start_pos": (30, 62),
         "scale_x": 5.0,
         "scale_y": 5.0,
-        "biomes": ["canyon", "desert", "metallic_wasteland", "rocky"],
+        "biomes": ["canyon", "desert", "desert", "desert", "metallic_wasteland", "rocky"],
         "creatures": ["silica scorpion", "dune stalker", "sun beetle", "wire asp"],
         "items": ["metallic needle shard", "fused silicate", "solar collector fragment"]
     },
@@ -119,7 +143,7 @@ PLANETS = {
         "start_pos": (50, 50),
         "scale_x": 6.0,
         "scale_y": 6.0,
-        "biomes": ["water", "marsh", "crystalline", "rocky"],
+        "biomes": ["underwater", "marsh", "marsh", "crystalline", "rocky"],
         "creatures": ["marsh leech", "crystalline crawler", "plasma tick", "muta-chicken"],
         "items": ["bioluminescent spore", "crystalline shard", "alkali crust"]
     }
@@ -173,7 +197,13 @@ ROOM_NAMES_BY_BIOME = {
     "grassland": ["open prairie", "rolling savanna", "windy steppe", "tallgrass shelf", "whispering expanse"],
     "rocky": ["towering hill", "elevated range", "craggy bluff", "jagged summit", "scree field"],
     "metallic_wasteland": ["ruined concourse", "needle waste", "slag terrace", "shattered foundry", "reactor verge"],
-    "crystalline": ["crystalline circle", "shimmering terrace", "prism hollow", "vitrified crest", "resonance pit"]
+    "crystalline": ["crystalline circle", "shimmering terrace", "prism hollow", "vitrified crest", "resonance pit"],
+    "underwater": ["submerged shelf", "blue trench", "sunken basin", "tidal cavern", "kelp plain"],
+    "jungle": ["tangled canopy", "green labyrinth", "vine-choked hollow", "orchid grove", "verdant basin"],
+    "mountain": ["high ridge", "stone crown", "wind-scoured peak", "talus slope", "cloud shelf"],
+    "fungal_zone": ["spore garden", "fungal hollow", "mycelium field"],
+    "volcanic": ["lava field", "cinder cone", "basalt vent"],
+    "pink_desert": ["rose dune", "pink salt flat", "coral basin"]
 }
 
 CARDINAL_DIRECTIONS = {
@@ -220,8 +250,17 @@ def biome_at(planet_id: str, x: int, y: int) -> str:
     Both room generation and the tactical map use this function.
     """
     planet = PLANETS[planet_id]
+    x, y = x % 100, y % 100
+    # Rare ecological pockets are isolated patches, easy to spot on the map.
+    rare = pseudo_hash(planet_id, x, y, 8181)
+    if planet_id == "MO-52" and rare % 401 == 0:
+        return "pink_desert"
+    if planet_id in ("WY-1444", "AE-1655") and rare % 503 == 0:
+        return "fungal_zone"
+    if planet_id in ("WY-1444", "MO-52") and rare % 607 == 0:
+        return "volcanic"
     biomes = planet["biomes"]
-    index = fbm2d(x % 100, y % 100, planet["scale_x"], planet["scale_y"], len(biomes), octaves=1)
+    index = fbm2d(x, y, planet["scale_x"], planet["scale_y"], len(biomes), octaves=1)
     return biomes[max(0, min(index, len(biomes) - 1))]
 
 
@@ -247,6 +286,7 @@ class Room:
         self.hostile_droids: List[Dict[str, Any]] = []
         self.poi_alert = ""
         self.items: Dict[str, str] = {}
+        self.resource_gathered: Dict[str, int] = {}
         if self.poi_kind == "droid factory":
             self.hostile_droids = [
                 {"name": f"cell-bomber droid (mk-{pseudo_hash(planet_id, x, y, 1771) % 900000 + 100000})", "health": 60, "active": False},
@@ -272,7 +312,7 @@ class Room:
         h_therm = pseudo_hash(planet_id, x, y, 404)
         h_water = pseudo_hash(planet_id, x, y, 505)
 
-        if self.biome_key in ("forest", "grassland", "marsh", "desert"):
+        if self.biome_key in ("forest", "grassland", "marsh", "desert", "jungle", "fungal_zone", "pink_desert"):
             self.sentences.append(DESCRIPTIONS_FLORA[h_flora % len(DESCRIPTIONS_FLORA)])
             if (h_flora >> 2) % 2 == 0:
                 self.sentences.append(DESCRIPTIONS_FLORA[(h_flora + 3) % len(DESCRIPTIONS_FLORA)])
@@ -287,8 +327,16 @@ class Room:
         # Creatures present
         self.creatures: List[str] = []
         h_critter = pseudo_hash(planet_id, x, y, 606)
-        if (h_critter % 100) < 65:  # 65% chance of creatures
-            c_pool = planet["creatures"]
+        if (h_critter % 100) < (82 if self.biome_key in ("jungle", "fungal_zone", "underwater") else 55 if self.biome_key in ("mountain", "volcanic") else 65):
+            biome_creatures = {
+                "underwater": ["marsh leech", "plasma tick", "tidal grazer"],
+                "jungle": ["spore crab", "canopy lurker", "muta-chicken", "wire asp"],
+                "mountain": ["ridge stalker", "rust hound", "feral drone"],
+                "fungal_zone": ["spore crab", "fungal crawler", "muta-chicken"],
+                "volcanic": ["cinder beetle", "magma burrower"],
+                "pink_desert": ["roseback skitter", "sun beetle", "silica scorpion"],
+            }
+            c_pool = biome_creatures.get(self.biome_key, planet["creatures"])
             c1 = c_pool[h_critter % len(c_pool)]
             self.creatures.append(c1)
             if (h_critter % 100) < 30:
@@ -301,6 +349,27 @@ class Room:
         if (h_item % 100) < 40:
             item_name = planet["items"][h_item % len(planet["items"])]
             self.items.setdefault(item_name, f"A salvageable {item_name} rests on the ground.")
+
+        special_items = {
+            "fungal_zone": ("volatile fungal spores", "A cloud of volatile fungal spores clings to the damp ground."),
+            "volcanic": ("heat-resistant alloy nodule", "A heat-resistant alloy nodule glints between the basalt plates."),
+            "pink_desert": ("rose quartz crystal", "A rare rose quartz crystal is half-buried in the pink sand."),
+            "underwater": ("pressure-grown pearl", "A pressure-grown pearl rests in a shallow pool."),
+        }
+        if self.biome_key in special_items and pseudo_hash(planet_id, x, y, 717) % 100 < 30:
+            item_name, description = special_items[self.biome_key]
+            self.items.setdefault(item_name, description)
+
+        self.event = None
+        event_chance = pseudo_hash(planet_id, x, y, 919) % 100
+        if self.biome_key == "fungal_zone" and event_chance < 25:
+            self.event = "A burst of spores drifts through the fungal growth."
+        elif self.biome_key == "volcanic" and event_chance < 35:
+            self.event = "A nearby vent exhales a wave of superheated gas."
+        elif self.biome_key == "pink_desert" and event_chance < 30:
+            self.event = "A wind-scoured patch reveals a glimmer of rose quartz."
+        if self.event:
+            self.sentences.append(self.event)
 
         self.sitting_users: Dict[Any, str] = {}
 
@@ -431,7 +500,7 @@ def format_side_by_side(map_rows: List[str], room: Room,
     # 2. Colored Biome Badge
     badge_bg = room.biome["bg"]
     badge_fg = BOLD + FG_WHITE if badge_bg != BG_WHITE else BOLD + FG_BLACK
-    biome_badge = f"{badge_bg}{badge_fg} {room.biome_key} biome {RESET}"
+    biome_badge = f"{badge_bg}{badge_fg} {room.biome['name']} biome {RESET}"
     text_lines.append(biome_badge)
 
     if room.poi_kind:
