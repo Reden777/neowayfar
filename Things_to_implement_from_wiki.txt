@@ -1,0 +1,1212 @@
+Structure crafting tool
+Save
+Edit
+Boasting a single detachable structure drone, this tool is used to construct buildings and building components.
+
+Category: tool
+
+material processor
+Category: component
+
+inert beam
+inert siding
+simple structure base
+structure power core
+domestic grade building AI
+light structure base
+inert frame
+medium structure base
+Category: automated harvester
+
+low-tech lumber yard
+automated mining plant
+solar energy collector
+geo/radiothermal power plant
+Category: building
+
+garage
+helo pad
+factory
+trash compactor
+commerce outlet
+racetrack
+machine arena
+rec dome
+sector center
+holo-theater
+emergency clinic
+small turret
+medium turret
+heavy turret
+cantina
+starship complex
+small warehouse
+chop shop
+infirmary
+dockhouse
+militia barracks
+hangar
+hostel
+laboratory
+refinery
+chapel
+agriculture pod
+stockpile warehouse
+Category: container
+
+closet
+resource locker
+metal locker
+Category: product
+
+solo artist stage
+shuttle terminal
+Requirements for structure crafting tool:
+
+weak power emitter x1
+solid-phase metal x4
+inert casing x4
+Total complexity for this project: 15.0
+
+---
+
+Defensive crafting tool
+Save
+Edit
+Category: building
+
+small turret
+medium turret
+heavy turret
+Category: gadget
+
+ineffecient close combat shield
+energy reflux reactive shield
+bullet-shield reactive healing unit
+biowatch reactive healing unit
+host stabilization reactive unit
+Category: module
+
+rotating laser turret
+scout-class rat gatler
+mobile SRM package
+simplex vehicle lock
+robo-terrier vehicle lock
+v-tite vehicle lock
+jungle cat electronic protection system
+shield-tek vehicle lock
+rabid dorg electronic protection system
+elite-tek vehicle lock
+
+---
+
+Advanced structure tool
+Save
+Edit
+Category: component
+
+lumber siding
+composite beam
+composite siding
+Category: automated harvester
+
+electromagnetic field collector
+Category: building
+
+colonial ranch
+faction headquarters
+fortified redoubt
+shelter bunker
+organic processing plant
+large warehouse
+nuclear enrichment plant
+Category: container
+
+fishbowl
+small fishtank
+stylish fishtank
+huge fishtank
+Category: product
+
+remote control button
+plastiform table
+comfy couch
+
+---
+
+Component crafting tool
+Save
+Edit
+Category: melee weapon
+
+colonial machete
+Category: ranged weapon
+
+colonial rifle
+Category: harvesting tool
+
+cheap orgo-reaper
+atmo-thrasher condenser
+q-osmose energy collector
+Category: special weapon
+
+low-power hand miner
+terrain surveyor
+Category: armor
+
+hide armor
+Category: tool
+
+equipment crafting tool
+structure crafting tool
+micro-bot crafting tool
+defensive crafting tool
+chemistry tool
+food processor
+maker block
+cooking fire
+Category: food
+
+insta-meat soup
+Category: component
+
+weak power emitter
+inert casing
+inert block
+medium power emitter
+domestic maker AI
+heavy power emitter
+homebrew logical AI
+homebrew defensive AI
+industrial grade maker AI
+empty nanobot can
+inert wiring
+Category: ammunition
+
+inert slug clip
+Category: container
+
+fiber backpack
+Category: pre-fab kit
+
+pre-fab shelter kit
+fragmentation grenade
+wooden fishing rig
+furb@home health injector
+fungal salve
+fibrous bandage
+primitive bandage
+
+---
+
+# Skills
+
+Skills
+Save
+Edit
+Skills determine your player's abilities, success at actions, and increase maximum hitpoints. Skills are grouped together by type - to gain the most benefit from a skill type, you generally need to purchase all the skills in the group.
+
+Performing actions rewards you with skillpoints, some actions will grant you more if you have learned the relevant skills to the action. These skillpoints are then spent to purchase available skills. Players have a maximum number of skillpoints, but as you reroll successfully you can increase this maximum. Type score or skills to view and purchase skills.
+
+
+
+
+Contents
+1	Tech Weapons
+2	Primitive Weapons
+3	Off-World Weapons
+4	Primitive Assembly
+5	Tech Operation
+6	Off-World Operation
+7	Security
+8	Medicine
+9	Exploration
+10	Tech Assembly
+11	Off-World Assembly
+12	Science
+13	Vehicles
+14	Cunning
+15	Survival
+16	Social
+17	Economics
+18	Starships
+19	Innate background skills
+Tech Weapons
+Power Operation
+You have a layman's understanding of electricity. This skill costs 50 skillpoints.
+
+This skill modifies clarity dice maximum by 1.
+
+Touchpanel Training
+The touch activated interfaces used galaxy wide are no mystery to you. This skill costs 100 skillpoints. Requires Power Operation pre-requisite skills.
+
++1 to success rolls requiring this skill.
+
+Non-Standard Ammunition Experience
+Sometimes you need to make a hole, sometimes you need to set something on fire. Sometimes you need the ability to do both with the same weapon. Part of the tech weapons skill group. Requires Power Operation pre-requisite skills. This skill costs 150 skillpoints.
+
+Max Health Increase: 5
+
+Machine Spirit
+You can talk to machines. Seriously. This skill costs 200 skillpoints. Requires Power Operation, Touchpanel Training, Non-Standard Ammunition Experience pre-requisite skills.
+
+Max Health Increase: 5
+This skill grants the 'Gun Thug' nickname.
+
+
+Primitive Weapons
+Knows Which End Hurts People
+You have learned which way the sharp end goes. This skill costs 50 skillpoints.
+
++1 to success rolls requiring this skill.
+This skill assists throw.
+This skill assists hunt.
+
+Self Defense Training
+You've undergone some basic combat training. Part of the primitive weapons skill group. This skill costs 100 skillpoints. Requires Knows Which End Hurts People pre-requisite skills.
+
++1 to defense roll.
+Max Health Increase: 5
+This skill grants the punch command.
+This skill grants the kick command.
+This skill assists throw.
+
+Advanced Slashing and Shooting
+Straightforward plinking has increased your aptitude for simple ranged weapons. Part of the primitive weapons skill group. This skill costs 150 skillpoints. Requires Knows Which End Hurts People pre-requisite skills.
+
++1 to success rolls requiring this skill.
+This skill modifies aggression dice maximum by 1.
+This skill assists throw.
+
+Land Warrior
+Combat experience has made you a respectable opponent when using primitive weapons. Part of the primitive weapons skill group. This skill costs 200 skillpoints. Requires Knows Which End Hurts People, Self Defense Training, Advanced Slashing and Shooting pre-requisite skills.
+
+Max Health Increase: 10
+This skill grants the 'Da Chopper' nickname.
+This skill modifies aggression dice maximum by 2.
+This skill assists throw.
+
+
+Off-World Weapons
+Public Murder License
+This skill costs 100 skillpoints. Requires Non-Standard Ammunition Experience pre-requisite skills.
+
+Max Health Increase: 5
+This skill modifies aggression dice maximum by 1.
+
+Beam Gunnery School
+This skill costs 100 skillpoints. Requires Public Murder License pre-requisite skills.
+
++1 to success rolls requiring this skill.
+
+War-Glove Adept
+This skill costs 100 skillpoints. Requires Public Murder License pre-requisite skills.
+
++1 to success rolls requiring this skill.
+
+Professional Combatant
+This skill costs 200 skillpoints. Requires Public Murder License, Beam Gunnery School, War-Glove Adept pre-requisite skills.
+
+Max Health Increase: 5
+
+
+Primitive Assembly
+Improvisation
+You need things, but you don't have much in the way of tools. This is the very first crafting skill and will you to craft the lowest complexity items from materials you scavenge or harvest. This skill costs 50 skillpoints.
+
+This skill grants the improvise command.
+This skill assists improve.
+
+Crude Planning
+This skill costs 100 skillpoints.
+
+Reduces related action duration by 0.8 seconds.
+This skill assists improve.
+This skill assists scavenge.
+
+Better Materials
+You have a knack for spotting areas where another material could do the job better of a 'standard' material. On top of this, you have an eye for such materials and naturally gain a passive bonus to the quality of materials you harvest. Part of the primitive assembly skill group. This skill costs 150 skillpoints. Requires Improvisation, Crude Planning pre-requisite skills.
+
+Max Health Increase: 5
+This skill grants the purify command.
+This skill assists improve.
+
+Crafter
+This skill costs 200 skillpoints. Requires Improvisation, Crude Planning, Better Materials pre-requisite skills.
+
++1 to success rolls requiring this skill.
+Reduces related action duration by 1.0 seconds.
+This skill grants the stamp command.
+This skill assists improve.
+This skill assists scavenge.
+
+Artisan
+Significant investment in detail work and craftsmanship - someone with this skill can produce the highest caliber of items. This skill costs 400 skillpoints. Requires Crafter pre-requisite skills.
+
+Max Health Increase: 10
++2 to success rolls requiring this skill.
+Reduces related action duration by 2.0 seconds.
+This skill grants the 'material magician' nickname.
+This skill modifies stamina dice maximum by 1.
+This skill modifies clarity dice maximum by 1.
+
+
+Tech Operation
+This is the main skilltree of installing and uninstalling modules from vehicles, starships, tools, etcetera.
+
+
+Basic Shiftscreen Operation
+This skill costs 75 skillpoints.
+
+This skill assists salvage.
+This skill assists play.
+This skill assists cut.
+This skill assists uninstall_module.
+This skill assists basic_play.
+
+Tech Practice
+This skill costs 75 skillpoints. Requires Basic Shiftscreen Operation pre-requisite skills.
+
++2 to success rolls requiring this skill.
+Reduces related action duration by 0.5 seconds.
+This skill modifies clarity dice maximum by 1.
+This skill assists salvage.
+This skill assists play.
+This skill assists cut.
+This skill assists uninstall_module.
+This skill assists scavenge.
+This skill assists basic_play.
+
+Low-Data Interfacing
+This skill costs 150 skillpoints. Requires Basic Shiftscreen Operation pre-requisite skills.
+
+This skill modifies stamina dice maximum by 1.
+This skill modifies clarity dice maximum by 1.
+This skill assists salvage.
+This skill assists uninstall_module.
+
+Has Read A Few Manuals
+This skill costs 200 skillpoints. Requires Basic Shiftscreen Operation, Tech Practice, Low-Data Interfacing pre-requisite skills.
+
+Max Health Increase: 5
+This skill modifies clarity dice maximum by 2.
+This skill assists salvage.
+This skill assists uninstall_module.
+
+
+Off-World Operation
+Technology Buff
+This skill costs 75 skillpoints. Requires Has Read A Few Manuals pre-requisite skills.
+
++1 to success rolls requiring this skill.
+This skill modifies clarity dice maximum by 1.
+This skill assists cut.
+
+Data Decryption
+This skill costs 75 skillpoints. Requires Technology Buff pre-requisite skills.
+
+Max Health Increase: 5
+This skill assists cut.
+
+Data Interception
+This skill costs 150 skillpoints. Requires Data Decryption pre-requisite skills.
+
++1 to success rolls requiring this skill.
+
+Off-World Expertise
+This skill costs 200 skillpoints. Requires Technology Buff, Data Decryption, Data Interception pre-requisite skills.
+
+Max Health Increase: 5
++1 to success rolls requiring this skill.
+
+Off-World Resource Extraction
+Extensive courses in off-world resource extraction excercises has given you an aptitude with the application and control of mining and gathering starships, allowing you to run mining sequences quicker and more efficiently. This skill costs 500 skillpoints. Requires Off-World Expertise, Void Piloting, Starship Operation, Starship Engineering pre-requisite skills.
+
+Reduces related action duration by 2.5 seconds.
+
+
+Security
+This is the main skilltree of hacking objects using smartpads and programs.
+
+
+Matrix Coder
+Familiar with the rudiments of matrix code. Requires Low-Data Interfacing pre-requisite skills. This skill costs 75 skillpoints.
+
+
+Novice Hacker
+Familiar with grey-hat data access programs and some low-end viruses. This skill costs 75 skillpoints. Requires Matrix Coder pre-requisite skills.
+
++1 to success rolls requiring this skill.
+This skill assists play.
+This skill assists basic_play.
+
+System Repurposing
+Adept at intruding and implanting non-desired routines on most colonial matrix system. This skill costs 150 skillpoints. Requires Novice Hacker pre-requisite skills.
+
+Reduces related action duration by 1.0 seconds.
+
+Data Pro
+Complete mastery and recall of contraband access methods. This skill costs 200 skillpoints. Requires System Repurposing pre-requisite skills.
+
+Max Health Increase: 5
++1 to success rolls requiring this skill.
+
+
+Medicine
+First Aid
+This skill costs 50 skillpoints.
+
++1 to success rolls requiring this skill.
+This skill grants the BANDAGE command.
+This skill assists cure.
+
+Pharmacy
+This skill costs 100 skillpoints. Requires First Aid pre-requisite skills.
+
+Max Health Increase: 5
++1 to success rolls requiring this skill.
+This skill assists cure.
+
+Neurosurgeon
+This skill costs 150 skillpoints. Requires First Aid pre-requisite skills.
+
++1 to success rolls requiring this skill.
+This skill assists cure.
+
+Xenomedicine
+This skill costs 200 skillpoints. Requires First Aid, Pharmacy, Neurosurgeon pre-requisite skills.
+
+Max Health Increase: 5
++2 to success rolls requiring this skill.
+This skill assists cure.
+
+
+Exploration
+Sightseer
+Capable of noting major landmarks and walking in a straight line.
+
+This skill costs 25 skillpoints.
+This skill assists survey.
+This skill assists explore.
+This skill assists discover.
+This skill assists repeating_explore.
+
+Developing Observation
+This skill costs 75 skillpoints. Requires Sightseer pre-requisite skills.
+
+This skill assists survey.
+This skill assists explore.
+This skill assists discover.
+This skill assists repeating_explore.
+
+Terrain Details
+This skill costs 150 skillpoints. Requires Developing Observation pre-requisite skills.
+
++1 to success rolls requiring this skill.
+This skill grants the SURVEY command.
+This skill assists hunt.
+This skill assists survey.
+This skill assists explore.
+This skill assists discover.
+This skill assists repeating_explore.
+
+Unpaid Cartographer
+This skill costs 250 skillpoints. Requires Sightseer, Developing Observation, Terrain Details pre-requisite skills.
+
+Max Health Increase: 5
++1 to success rolls requiring this skill.
+This skill grants the DISCOVER command.
+This skill grants the 'Scout' nickname.
+This skill assists survey.
+This skill assists discover.
+
+
+Tech Assembly
+Zoning License
+The skill of navigating the red (and magenta) tape - required for assembly on a larger scale. This skill costs 50 skillpoints. Requires Crafter pre-requisite skills.
+
+This skill modifies stamina dice maximum by 1.
+
+Factory Operation
+This skill costs 100 skillpoints. Requires Zoning License pre-requisite skills.
+
+Max Health Increase: 5
+
+Line Management
+This skill costs 150 skillpoints. Requires Zoning License pre-requisite skills.
+
+Reduces related action duration by 1.2 seconds.
+
+Quality Control
+This skill costs 200 skillpoints. Requires Zoning License, Factory Operation, Line Management pre-requisite skills.
+
++1 to success rolls requiring this skill.
+This skill grants the INSPECT command.
+
+
+Off-World Assembly
+Schematic Mastery
+Familiar with esoteric and conventional blueprints and plans. This skill costs 75 skillpoints. Requires Quality Control pre-requisite skills.
+
+
+Advanced Assembly Platforms
+This skill costs 75 skillpoints. Requires Schematic Mastery pre-requisite skills.
+
+Max Health Increase: 5
+Reduces related action duration by 3.0 seconds.
+
+Particle Recombination
+This skill costs 150 skillpoints.
+
++1 to success rolls requiring this skill.
+Requires Schematic Mastery pre-requisite skills.
+
+Nanofactory Baron
+This skill costs 200 skillpoints. Requires Schematic Mastery, Advanced Assembly Platforms, Particle Recombination pre-requisite skills.
+
+This skill grants the 'Off-World Specialist' nickname.
+
+
+Science
+Lab Operation
+Basic lab equipment and safety knowledge. This skill costs 150 skillpoints. This skill grants the 'Tube Handler' nickname.
+
+
+Research Focus
+This skill costs 150 skillpoints. Requires Lab Operation pre-requisite skills.
+
++1 to success rolls requiring this skill.
+This skill grants the 'Unsanctioned Researcher' nickname.
+This skill assists research.
+
+Experimental Process
+This skill costs 100 skillpoints. Requires Lab Operation pre-requisite skills.
+
++1 to success rolls requiring this skill.
+
+Multidisciplinarian
+This skill costs 100 skillpoints. Requires Lab Operation, Research Focus, Experimental Process pre-requisite skills.
+
+Max Health Increase: 10
+This skill grants the 'President of the Orb Fan Club' nickname.
+This skill assists research.
+
+
+Vehicles
+Driving
+This skill is required to operate any land vehicle more complex than a q-cycle. This skill costs 100 skillpoints.
+
+This skill grants the 'Driver' nickname.
+
+Flying
+This skill is required to fly aircraft. Aircraft can travel the planetary surface quickly, as well as support ground operations or engage in air-to-air combat. This skill costs 100 skillpoints.
+
+This skill grants the 'Pilot' nickname.
+
+Expert Control Operation
+This skill costs 150 skillpoints. Requires Driving, Flying pre-requisite skills.
+
+Max Health Increase: 5
+
+Experienced Pilot
+This skill costs 150 skillpoints. Requires Expert Control Operation pre-requisite skills.
+
+Max Health Increase: 5
++1 to success rolls requiring this skill.
+This skill grants the 'Ace' nickname.
+This skill assists play.
+This skill assists basic_play.
+
+
+Cunning
+Underhanded
+This skill costs 125 skillpoints.
+
++1 to dodge rolls.
++1 to success rolls requiring this skill.
+This skill assists throw.
+
+Shadow Fiend
+This skill costs 125 skillpoints. Requires Underhanded pre-requisite skills.
+
+This skill grants the 'Night Strangler' nickname.
+This skill assists throw.
+
+Under the Radar
+This skill costs 125 skillpoints. Requires Underhanded pre-requisite skills.
+
+Max Health Increase: 5
+
+Ghost Profile
+This skill costs 125 skillpoints. Requires Underhanded, Shadow Fiend, Under the Radar pre-requisite skills.
+
++1 to dodge rolls.
+This skill grants the 'Terrorist' nickname.
+This skill grants the BACKSTAB command.
+
+
+Survival
+Heavy Tan
+This skill costs 75 skillpoints.
+
+Max Health Increase: 10
+
+Situational Awareness
+This skill costs 75 skillpoints.
+
++1 to dodge rolls.
+This skill grants the FOCUS command.
+This skill modifies stamina dice maximum by 1.
+This skill assists hunt.
+
+I Work Out
+This skill costs 100 skillpoints. Requires Heavy Tan pre-requisite skills.
+
++1 to defense roll.
+This skill modifies stamina dice maximum by 1.
+
+Tough Guy
+This skill costs 250 skillpoints. Requires Heavy Tan, Situational Awareness, I Work Out pre-requisite skills.
+
+Max Health Increase: 10
+This skill modifies stamina dice maximum by 2.
+
+Strong Back
+You have a strong back and shoulders and can bear a greater load as a result.
+
+You can carry 40% more weight when you learn this skill.
+This skill costs 100 skillpoints.
+
+Packrat
+You can find a place for anything!
+
+You can carry 25% more items when you learn this skill.
+This skill costs 100 skillpoints.
+
+
+Social
+Theology
+
+This skill requires 5 reroll points to learn.
+This skill costs 250 skillpoints.
+This skill grants the BLESS command.
+This skill grants the PREACH command.
+This skill modifies stamina dice maximum by 1.
+This skill modifies clarity dice maximum by 1.
+This skill modifies aggression dice maximum by -2.
+
+Musician
+This skill costs 500 skillpoints.
+
+
+Consultant
+This skill costs 500 skillpoints.
+
+
+
+Economics
+negotiation
+This skill represents the basic ability form business relationships and produce income by selling items. This skill costs 100 skillpoints.
+
+This skill grants the CONTRACTS command.
+
+supply expert
+This skill costs 200 skillpoints. Requires negotiation pre-requisite skills.
+
+This skill grants the REQUISITION command.
+
+
+Starships
+Void Gunnery
+Training in class 1 starship gunnery. This skill costs 100 skillpoints. Requires Technology Buff pre-requisite skills.
+
++1 to success rolls requiring this skill.
+
+Starship Operation
+General knowledge of a starship's mechanics. This skill costs 100 skillpoints.
+
+Max Health Increase: 5
+
+Void Piloting
+Capable of operating most starship navigation consoles. This skill costs 100 skillpoints. Requires Starship Operation pre-requisite skills.
+
++1 to success rolls requiring this skill.
+
+Starship Command
+Capable of giving orders from the bridge. This skill costs 200 skillpoints. Requires Void Piloting, Starship Operation, Void Gunnery pre-requisite skills.
+
+Max Health Increase: 10
++2 to success rolls requiring this skill.
+This skill grants the 'Space Captain' nickname.
+This skill assists play.
+This skill assists basic_play.
+
+Starship Engineering
+Familiarity with most starship drive, fuel, and power systems. This skill costs 250 skillpoints. Requires Starship Operation pre-requisite skills.
+
+Max Health Increase: 2
++2 to success rolls requiring this skill.
+This skill assists cut.
+
+Starship Repair
+Training in general starship repair, including conduits, panels, cabling, as well as inner and outer hulls. Part of the starships skill group. This skill costs 250 skillpoints. Requires Starship Operation pre-requisite skills.
+
+Max Health Increase: 2
+
+EVA Specialization
+Specialized training in void operations using various suits. This skill costs 250 skillpoints. Requires Starship Operation pre-requisite skills.
+
+Max Health Increase: 2
+
+Void Data Analyst
+Capable of performing electronic warfare on an appropriately equipped starship. This skill costs 250 skillpoints. Requires Starship Operation, Data Decryption pre-requisite skills.
+
+
+
+Innate background skills
+Insane in the Membrane
+Part of the innate skills known by FREAKS.
+
++1 to dodge rolls.
++1 to success rolls requiring this skill.
+This skill modifies aggression dice maximum by 5.
+
+Keen Eye
+Part of the innate skills known by RANGERS.
+
++2 to success rolls requiring this skill.
+This skill modifies clarity dice maximum by 5.
+
+---
+
+Improvise
+Save
+Edit
+There are two ways to improvise. You can just type improvise and you'll be presented with a menu of all the items in your inventory that can be used for improvisation. After selecting one of the items you get another menu of all the things you can craft with it. This method has a chance of failure, depending on your relevant skills.
+
+The second way to improvise is with tools. To list the recipes you can improvise on a tool, enter the command improvise on <tool>. If any recipes are available, they will be listed. Note that this menu will not display the required components of the objects you can create. Once you have decided on the object you want to craft, you can make it with similar syntax to regular crafting, specifically improvise <object> on <tool>.
+
+---
+
+Research
+Save
+Edit
+Research is performed at a Research Terminal inside a Laboratory. You can find items to research by discovering after you have fully explored a location.
+
+indecipherable q-disk
+odd trinket
+q-locked medical bay
+
+---
+
+# An original start up guide
+
+Starting out
+Save
+Edit
+When you just start out (or after a reroll) you will find yourself in a shuttle with the game suggesting you to get out. This is a good suggestion so just follow the instructions and go out of the shuttle. You'll end up at the commerce main junction way at the alpha complex. There's some shops and other facilities around but if you are eager to really get started you probably want to head east to the complex-alpha mall lobby.
+
+At this point the game may or may not give you some hints about terminals you see here. Before you can use any of them you will have to set both your @gender and background though. Also, take a moment to @describe me as <your description here> to set a custom description. It doesn't have to be an essay - even a single line is better than nothing.
+
+The colony dispatch terminal is used if you want to start a new colony or if you don't have a beacon setup. The link-up terminal can be used if you, or somebody you want to join up with has a beacon setup and active at his or her colony. Take a moment to examine the terminals and use the one that is appropriate for your situation (it will probably be the dispatch terminal for most new players). No matter what terminal you use, you'll eventually end up in a drop pod falling towards a planet.
+
+
+
+Backgrounds
+Before you can set out, the game requires you to choose a background. There is really no right or wrong choice here so I recommend you take the one that seems the most fun and compatible with the things you would like to do.
+
+If you really have no clue I recommend going for the ranger (or botanist perhaps). These are very straightforward to complete for new players as they only depend on you having a few skills. You do have a bit more control with the ranger background on when you want to finish it but it gives you one less reroll point.
+
+If you go with botanist you get to explore and discover a lot which also will add to your blueprint chip collection (more on that later, just collect these for now and store them somewhere safe). Additionally, you will probably find stuff that you need to research or hack. Store these somewhere safe too as they will be useful later when you are doing the lab technician or hacker backgrounds.
+
+Note that some backgrounds involve jobs that include wait times (both ranger and botanist have these).
+
+
+
+Setting up
+After you have been dispatched to a planet or linked up with an existing colony, you'll find yourself with a basic set of harvesting and crafting equipment. Also you get some other helpful items such as the datapad and handbook (which you should read). Take a moment to look through your inventory and examine everything to find out what actions (commands) it supports.
+
+Afer this check out your crafting tools (probably only the basic crafting tool) and do a list basic crafting tool to see what things it can craft. One of these is a pre-fab shelter kit which you should make as soon as possible. Before you do though, try to find a nice spot. Ideally, it has a nice long room description signalling the abundance of a lot of resources (in particular inert metal)but this is not essential.
+
+You do want to set up near a spot that has a good variety of biomes nearby. When starting out, you probably want to be on a planet that has forest, jungle, mountains and desert and a spot that has those biomes nearby. Eventually you'll need to harvest in other biomes too but that can wait. If you have the aforementioned biomes on your planet (and preferably nearby) you'll be in a good position to craft everything you need to get spaceborn.
+
+Note that you can also use the map command to check out various aspects of your surroundings. The command itself will explain about its various options but the map biomes one is the more useful.
+
+Don't worry too much though. If you find a better spot later on you can always dismantle your buildings and relocate. You can bring most stuff and get the materials for your buildings back but you probably have to rebuild your processors.
+
+
+
+Skills
+Before you start exploring for a good spot, check your status and skills and note the amount of skillpoints available. You could probably learn some skills right now. You can use the skill command to browse the available skill groups and also to view skills in each group and see what they do. The skill system in Wayfar1444 is very friendly and facilitates trying different skills and combinations out. If you learn a skill and you are not satisfied with it or if you just want to try out something else, you can always forget a skill and get 75% of your skillpoints back.
+
+This also means you don't have to create an army of alts to try out various things as you can often easily flip your complete build around on your main faster than you can setup a new character. The reason for this is that you get skillpoints by using skills. So the more skills you have, the faster you will get skillpoints. This means that on a developed character it's usually not a big problem to regain the skillpoints that were lost.
+
+When you are a brand new character, the max amount of skillpoints you gain (and consequently spend) is 2500. You can increase this amount by completing your background and rerolling.
+
+---
+
+Colonial machete
+Save
+Edit
+A simple long metal blade with a wooden handle, useful for cutting vegetation but also serves as a weapon in a pinch.
+
+Requirements for colonial machete:
+
+inert metal x2
+native lumber x1
+Total complexity for this project: 11.0Material processor
+Save
+Edit
+A basic crafting tool for creating simple products.
+
+Category: resource
+
+alcohol
+polymer fiber
+mineral acids
+petroleum distillate
+Category: component
+
+solid-phase alloy
+supermagnetic alloy
+ceramic plate
+reactive armor plate
+plastiform brick
+electronics-grade silica
+rare earth metal
+refined elastomer
+fiber cloth
+adaptive-phase fabric
+hardened leather
+plastiform mesh
+nano-fullerene wafer
+nano-cor wafer
+nano-silk fabric
+silk cloth
+polymer brick
+Requirements for material processor:
+
+weak power emitter x3
+solid-phase metal x4
+inert casing x4
+Total complexity for this project: 20.0
+
+---
+
+Inert beam
+Save
+Edit
+A big ol' structural metal beam
+
+Requirements for inert beam:
+
+inert metal x3
+Total complexity for this project: 5.0
+
+---
+
+Inert siding
+Save
+Edit
+A sheet of corrugated metal, to protect a building from the elements
+
+Requirements for inert siding:
+
+inert metal x2
+
+---
+
+Simple structure base
+Save
+Edit
+Requirements for simple structure base:
+
+native lumber x8
+inert metal x4
+Total complexity for this project: 25.0
+
+---
+
+Native lumber
+Save
+Edit
+A flexible length of wood from a local tree analogue
+
+---
+
+Structure power core
+Save
+Edit
+Requirements for structure power core:
+
+weak power emitter x1
+inert metal x8
+any energy x5
+Total complexity for this project: 30.0
+
+---
+
+Domestic grade building AI
+Save
+Edit
+Requirements for domestic grade building AI:
+
+blank IC chip x2
+neuro-aligned fiber x2
+Total complexity for this project: 17.0
+
+---
+
+Light structure base
+Save
+Edit
+A light, durable frame for simple colonial structures
+
+Requirements for light structure base:
+
+weak power emitter x1
+solid-phase metal x2
+Total complexity for this project: 10.0
+
+---
+
+Inert frame
+Save
+Edit
+A four sided metallic frame.
+
+Requirements for inert frame:
+
+inert metal x4
+Total complexity for this project: 15.0
+
+---
+
+Medium structure base
+Save
+Edit
+Requirements for medium structure base:
+
+inert metal x10
+solid-phase alloy x6
+Total complexity for this project: 50.0
+
+---
+
+Solid-phase alloy
+Save
+Edit
+A tough alloy of solid-phase metal ore and inert metal
+
+Requirements for solid-phase alloy:
+
+inert metal x1
+solid-phase metal x2
+Total complexity for this project: 12.0
+
+---
+
+Solid-phase metal
+Save
+Edit
+An uneven chunk of ferrous metal, used in the construction of tough and enduring structures and equipment
+
+Where the ground has eroded, gray-brown ores can be spotted.
+
+---
+
+Automated mining plant
+Save
+Edit
+A bulky monolith of pipes, wires and mechanical components with the sole purpose of pulling minerals from the ground without human intervention.
+
+This building can harvest inert metal, solid-phase metal, responsive metal, sand.
+
+Requirements for automated mining plant:
+
+industrial coordinator AI x1
+inert metal x10
+inert beam x4
+inert siding x4
+solid-phase alloy x8
+light structure base x1
+structure power core x2
+Total complexity for this project: 65.0
+
+---
+
+Factory
+Save
+Edit
+A large steel building with smokestacks spewing out smoke. Factories contain the means to build more complex products.
+
+Requirements for factory:
+
+simple structure base x2
+inert beam x4
+inert siding x6
+structure power core x1
+Total complexity for this project: 28.0
+
+---
+
+Sector center
+Save
+Edit
+Description: A large, gray building characterized by blocky, brutalist architecture. A distinct lack of windows and smooth, rounded edges and corners lead to a bureaucratic appearance. The building acts as the head of affairs in tourism and citizenship, giving colonists a path towards citizenship.
+
+Up to 5 of this building can be controlled by a single owner.
+
+
+Contents
+1	Requirements for sector center:
+2	central plaza (entrance)
+3	governor's office (east)
+4	factorium district (south)
+Requirements for sector center:
+simple structure base x2 -- 30% of project quality
+inert beam x10                      -- 30% of project quality
+inert siding x8                     -- 20% of project quality
+structure power core x4        -- 20% of project quality
+Total complexity for this project: 85.0
+
+HP: 2500  crime: 2 civ: 5 econ: 1 rec: 1 ind: 0
+
+It has 3 rooms:
+
+central plaza (entrance)
+Contains one resource locker.
+
+Obvious commands: 
+
+relax Relax for a while in the plaza.
+
+governor's office (east)
+    Obvious commands: 
+
+citizens/civilians/population Display this sector's civilians. 
+
+exile <anything> Permanently exile a civilian from the sector. 
+
+govern Manage sector allegiance. 
+
+defense Work in progress. 
+
+sectormap Shows a map of the sector, showing the number of buildings on each tile. 
+
+construction/building Manage colonist construction rights (off by default!). 
+
+buildings List all the buildings that belong to this sector. 
+
+res*ources View a readout of the local availability of resources around the sector center 
+
+colony View a readout of the sector center's population and building values. 
+
+events/history View a readout of recently recorded events. 
+
+roll*call Call back all your colonists to the center so you can give them orders or equip and heal them. 
+
+col*lection Configure colonist harvesting efforts. 
+
+mods/modules List modules. 
+
+activate <anything> Activate a module.
+
+factorium district (south)
+Obvious commands: 
+
+labor Perform manual labor for credits. (factorium labor contractor job)
+
+---
+
+Small warehouse
+Save
+Edit
+A large square storage warehouse with doors for loading and unloading.
+
+Requirements for small warehouse:
+
+inert beam x6
+inert siding x8
+light structure base x2
+structure power core x1
+Total complexity for this project: 40.0
+
+---
+
+Laboratory
+Save
+Edit
+Requirements for laboratory:
+
+simple structure base x2
+inert beam x4
+inert siding x6
+structure power core x2
+Total complexity for this project: 55.0
+
+---
+
+Refinery
+Save
+Edit
+Requirements for refinery:
+
+simple structure base x2
+inert beam x4
+inert siding x6
+solid-phase metal x6
+structure power core x1
+Total complexity for this project: 38.0
+
+---
+
+Stockpile warehouse
+Save
+Edit
+A bulky building, constructed with prefab sidings & acid resistant roofing. Generally, things are stored here.
+
+Requirements for stockpile warehouse:
+
+homebrew logical AI x1
+inert wiring x4
+inert beam x6
+inert siding x8
+light structure base x2
+structure power core x1
+Total complexity for this project: 55.0
+
+---
+
+Weak power emitter
+Save
+Edit
+A faintly glowing coil topped with a small control box, this device contains the energy equivalent of a small sun, but can only release an extremely tiny fraction of that energy at once. Massive, but not unlimited, energy stores are possible due to the self-sustaining low-output fusion reaction on a miniature scale that kretherson converters provide.
+
+Requirements for weak power emitter:
+
+inert metal x2
+any energy x5
+Total complexity for this project: 10.0
+
+---
+
+Krethersons
+Category page
+Save
+Edit
+Invented in 2132 by John Miguel "The Knife" Kretherson, this energy storage unit is standardized across the sector.
+
+These items come in several forms, such as solar or intrinsic, but always include the word kretherson in the name.
+
+---
+
+Inert casing
+Save
+Edit
+A boxy case for a device or assembly made of some inert metal.
+
+Requirements for inert casing:
+
+inert metal x2
+Total complexity for this project: 8.0
