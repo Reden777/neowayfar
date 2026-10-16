@@ -744,12 +744,31 @@ def process_command(address: Tuple[str, int], raw_message: str, server_socket: s
                             "Rooms: central plaza, governor's office, factorium district.\n"
                             "Commands: relax, citizens, govern, sectormap, construction, buildings, resources, colony, events, roll-call, collection, modules, labor.")
                 server_socket.sendto(response.encode("utf-8"), address)
-            elif target in room.items:
-                server_socket.sendto(room.items[target].encode('utf-8'), address)
-            elif target in [c.lower() for c in room.creatures]:
-                server_socket.sendto(f"A wild {target}. It surveys the surroundings cautiously.".encode('utf-8'), address)
             else:
-                server_socket.sendto(f"You don't see a '{target}' here.".encode('utf-8'), address)
+                # Resolve exact names first, then allow a short look target such
+                # as "asp" to identify a visible "wire asp". Search items and
+                # creatures together so partial names behave consistently.
+                item_name = next((name for name in room.items if name.lower() == target), None)
+                creature_name = next((name for name in room.creatures if name.lower() == target), None)
+                if item_name is not None:
+                    server_socket.sendto(room.items[item_name].encode('utf-8'), address)
+                elif creature_name is not None:
+                    server_socket.sendto(f"A wild {creature_name}. It surveys the surroundings cautiously.".encode('utf-8'), address)
+                else:
+                    matches = [("item", name) for name in room.items if target in name.lower()]
+                    matches += [("creature", name) for name in room.creatures if target in name.lower()]
+                    if len(matches) == 1:
+                        kind, name = matches[0]
+                        if kind == "item":
+                            response = room.items[name]
+                        else:
+                            response = f"A wild {name}. It surveys the surroundings cautiously."
+                        server_socket.sendto(response.encode('utf-8'), address)
+                    elif len(matches) > 1:
+                        names = ", ".join(name for _, name in matches)
+                        server_socket.sendto(f"Which do you mean: {names}?".encode('utf-8'), address)
+                    else:
+                        server_socket.sendto(f"You don't see a '{target}' here.".encode('utf-8'), address)
         else:
             send_look(address, server_socket)
         return
